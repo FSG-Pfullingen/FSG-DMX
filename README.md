@@ -1,2 +1,2 @@
-# FSG-DataProtocol-LIGHT
-A light Version of the Data-Transfer-Protocol made by the FSG-Pfullingen
+# FSG-DMX
+ A System to control DMX Lights with a RaspberryPi made by the FSG-Pfullingen 
