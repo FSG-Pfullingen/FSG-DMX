@@ -10,16 +10,10 @@ Add to  /etc/apt/sources.list
 Then Install:
 ```
 apt-get update
-apt-get install ola
 apt-get install ola-python
 ```
 ### Program:
 Clone from Github:
 ```
 git clone https://github.com/FSG-Pfullingen/FSG-DMX.git
-```
-Run setup.py:
-```
-cd ./FSG-DMX
-python setup.py
 ```
