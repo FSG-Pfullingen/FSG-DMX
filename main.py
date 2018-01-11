@@ -1,8 +1,9 @@
 from flask import Flask
 from flask import request, render_template
+import numpy as np
 
 main_book = dict()
-all_lights = {"Lamp":[1], "JBLED-A7":[12]}
+all_lights = {"Lamp":[["Brigthness"], []], "JBLED-A7":[["Brigthness", "Shutter", "R", "G", "B"], []]}
 
 app = Flask(__name__)
 
@@ -15,41 +16,57 @@ def set():
     """
     Set a DMX-Adress to a specified value
     """
-    dmx = request.args.get('dmx')
+    dmx = getdmx()
     value = request.args.get('value')
-    if dmx > 512 or value > 255 or dmx < 0 or value < 0:
-        return "Invalid Parameters"
-    light = main_book[dmx]
-    light[1] = value
-    main_book[dmx] = light
-    return "ARGS:" + str(main_book)
+    if not  0 < int(value) < 255:
+        return "Invalid Value"
+    main_book[dmx] = value
+    return "Worked!"
 
 @app.route("/get")
 def get():
-    dmx = request.args.get('dmx')
+    dmx = getdmx()
     if dmx in main_book:
         return main_book[dmx]
     else:
         return "Unused DMX"
 
+def get_type():
+    dmx = getdmx()
+
 @app.route("/setup")
 def setup():
-    dmx = request.args.get('dmx')
+    dmx = getdmx()
     typus = request.args.get('type', default="Lamp")
-    channels = request.args.get('channels', default=1)
+    channels = request.args.get('channels', default="1")
     if typus in all_lights:
-        channels, = all_lights[typus]
+        channels = len(all_lights[typus][1])
+    for channel in range(int(channels)):
+        main_book[str(int(dmx)+channel)] = 0
+    return "Setup done: dmx=" + str(dmx) + " type=" + typus + " num of channels:" + str(channels)
 
 @app.route("/save")
 def save():
-    filename = request.args.get("filename")
-    with open(filename, "w") as f:
-        f.write(str(main_book))
+    filename = request.args.get("filename", default="book")
+    try:
+        np.save(filename + '.npy', main_book)
+    except:
+        return "ERROR!"
+    else:
+        return "Saved!"
 
 @app.route("/load")
 def load():
-    filename = request.args.get("filename")
-    with open(filename, "r") as f:
-        main_book = eval(f.read()) #DANGER! could be abused, because python is executing all code in that file. DANGER!
+    filename = request.args.get("filename", default="book")
+    main_book = np.load(filename + '.npy').item()
+    return str(main_book)
+
+
+def getdmx():
+    dmx = request.args.get('dmx')
+    if not 0 < int(dmx) < 512:
+        return "Invalid DMX"
+    else:
+        return dmx
 
 app.run()
