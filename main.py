@@ -1,14 +1,25 @@
 from flask import Flask
-from flask import request, render_template
-import numpy as np
+from flask import request
+import json
 
-main_book = dict()
-all_lights = {"Lamp":[["Brigthness"], []], "JBLED-A7":[["Brigthness", "Shutter", "R", "G", "B"], []]}
+#Setup empty lists
+adresses = [0] * 513
+channels = [''] * 513
+#Get all usable Lights
+with open('lights.json', 'r') as f:
+    all_lights = json.loads(f.read())
+print all_lights
 
+#Setup Flask
 app = Flask(__name__)
 
+
+#--------------------------------Webservice--------------------
 @app.route("/")
 def main():
+    """
+    Just some info Page
+    """
     return "Running go localhost:5000/set?dmx=23&value=255 to turn light 23 to full brigthness"
 
 @app.route("/set")
@@ -16,57 +27,117 @@ def set():
     """
     Set a DMX-Adress to a specified value
     """
-    dmx = getdmx()
-    value = request.args.get('value')
-    if not  0 < int(value) < 255:
+    #Get values
+    dmx = getdmx(request)
+    value = int(request.args.get('value'))
+    #Check if in usable range
+    if not  0 <= value <= 255:
         return "Invalid Value"
-    main_book[dmx] = value
-    return "Worked!"
+    #Put value in  list
+    adresses[dmx] = value
+    #Return Debug information
+    return "SET:" + str(dmx) + ":" + str(value)
 
 @app.route("/get")
 def get():
-    dmx = getdmx()
-    if dmx in main_book:
-        return main_book[dmx]
-    else:
-        return "Unused DMX"
-
-def get_type():
-    dmx = getdmx()
+    """
+    Get the currently stored value for that DMX-Adress
+    """
+    #Get DMX-Adress
+    dmx = getdmx(request)
+    #Return the corresponding value
+    return "GET:" + str(dmx) + ":" + str(adresses[dmx])
 
 @app.route("/setup")
 def setup():
-    dmx = getdmx()
-    typus = request.args.get('type', default="Lamp")
-    channels = request.args.get('channels', default="1")
+    """
+    Put a name on the corresponding
+    DMX-Adresses
+    """
+    global channels
+    #Get all necessary values
+    dmx = getdmx(request)
+    typus = request.args.get('type')
+    num = request.args.get('channels')
+    force = bool(request.args.get('force', default=0))
+    #See if the type of light already exists
     if typus in all_lights:
-        channels = len(all_lights[typus][1])
-    for channel in range(int(channels)):
-        main_book[str(int(dmx)+channel)] = 0
-    return "Setup done: dmx=" + str(dmx) + " type=" + typus + " num of channels:" + str(channels)
+        num = len(all_lights[typus])
+        attr = all_lights[typus]
+    else:
+        attr = num * ['']
+    #Do you want to override existing settings?
+    if not force:
+        for i in range(dmx, (dmx+num)):
+            if not channels[i] == '':
+                return "Channels already in use, force with parameter force=1"
+                break
+    #Setup the name channels
+    for i in range(num):
+        channels[dmx + i] = (str(typus) + " | " + attr[i])
+        print str(dmx+i) + str(channels[dmx+i])
+    return str(channels)
+
+@app.route("/getfixture")
+def getfixture():
+    """
+    Get the name of the Fixture on that DMX-Adress
+    """
+    dmx = getdmx(request)
+    return channels[dmx]
+
+@app.route("/store")
+def store():
+    """
+    Store the current values for later use
+    """
+    dmxes = request.args.get("dmxes").split(",")
+    pos = request.args.get("position", default=None)
+    with open('states.json', 'r') as f:
+        states = json.loads(f.read())
+    if pos:
+        states[pos] =
+    else:
+        states.append()
+    with open('states.json', 'w') as f:
+        f.write(json.dumps(states)
+    return len(states)
 
 @app.route("/save")
 def save():
+    """
+    Save current setup to file (default both values and names)
+    """
     filename = request.args.get("filename", default="book")
-    try:
-        np.save(filename + '.npy', main_book)
-    except:
-        return "ERROR!"
-    else:
-        return "Saved!"
+    with open(filename + '.json', 'w') as f:
+        f.write(json.dumps([adresses, channels]))
+        return "SAVED"
 
 @app.route("/load")
 def load():
+    """
+    Load the saved values and names from file
+    """
+    global adresses
     filename = request.args.get("filename", default="book")
-    main_book = np.load(filename + '.npy').item()
-    return str(main_book)
+    with open(filename + '.json', 'r') as f:
+        adresses, channels = json.loads(f.read())
+    return str(adresses) + str(channels)
 
-
-def getdmx():
+# --------------------------------Functions---------------------------------
+def getdmx(request):
+    """
+    Get and validate the dmx adress
+    """
     dmx = request.args.get('dmx')
-    if not 0 < int(dmx) < 512:
+    if not 0 <= int(dmx) <= 512:
         return "Invalid DMX"
     else:
-        return dmx
+        return int(dmx)
 
-app.run()
+#Run!
+if __name__ == '__main__':
+    """
+    Run the Webserver
+    """
+    app.run()
