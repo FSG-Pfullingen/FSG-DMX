@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import request
 import json
+import dmx
 
 #Setup empty lists
 adresses = [0] * 513
@@ -35,6 +36,7 @@ def set():
         return "Invalid Value"
     #Put value in  list
     adresses[dmx] = value
+    dmx.send(adresses)
     #Return Debug information
     return "SET:" + str(dmx) + ":" + str(value)
 
@@ -86,22 +88,56 @@ def getfixture():
     dmx = getdmx(request)
     return channels[dmx]
 
-@app.route("/store")
-def store():
+@app.route("/store_state")
+def store_state():
     """
     Store the current values for later use
     """
     dmxes = request.args.get("dmxes").split(",")
-    pos = request.args.get("position", default=None)
+    pos = int(request.args.get("position", default=-1))
+    name = request.args.get("name", default='')
     with open('states.json', 'r') as f:
         states = json.loads(f.read())
-    if pos:
-        states[pos] =
+    savestate = {"name":name}
+    for dmx in dmxes:
+        savestate[dmx] = adresses[int(dmx)]
+    print str(len(states)) + ":" + str(pos)
+    if pos >= 0 and pos < len(states):
+        states[pos] = savestate
     else:
-        states.append()
+        states.append(savestate)
+        pos = len(states)-1
     with open('states.json', 'w') as f:
-        f.write(json.dumps(states)
-    return len(states)
+        f.write(json.dumps(states))
+    return "SAVED:" + str(pos)
+
+@app.route("/view_state")
+def view_state():
+    """
+    View a state previously saved
+    """
+    global adresses
+    pos = int(request.args.get("position", default=-1))
+    with open('states.json', 'r') as f:
+        states = json.loads(f.read())
+    if not pos == -1 and pos < len(states):
+        for adress in states[pos].keys():
+            if not adress == "name":
+                print str(adress) + ":" + str(states[pos][adress])
+                adresses[int(adress)] = states[pos][adress]
+        dmx.send(adresses)
+        return "LOADED"
+    return "INVALID KEY"
+
+def get_state_names():
+    """
+    Get names of all stored states
+    """
+    with open('states.json', 'r') as f:
+        states = json.loads(f.read())
+    for state in states:
+        state["name"]
+
 
 @app.route("/save")
 def save():
@@ -140,4 +176,5 @@ if __name__ == '__main__':
     """
     Run the Webserver
     """
+    dmx.start()
     app.run()
