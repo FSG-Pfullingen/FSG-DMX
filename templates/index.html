@@ -1,0 +1,74 @@
+<html>
+<head>
+  <title>Test Site</title>
+</head>
+<body>
+  <h1>Test Site</h1>
+  <form action="http://localhost:5000/set" method="get">
+    <label>Set:</label>
+    <label>DMX:</label>
+    <input type="number" min="0" max="512" value="0" name="dmx">
+    <label>Value:</label>
+    <input type="range" min="0" max="255" value="127" name="value" onchange="this.form.submit()">
+  </form>
+  <form action="http://localhost:5000/setup" method="get">
+    <label>Setup:</label>
+    <label>DMX:</label>
+    <input type="number" min="-1" max="512" value="-1" name="dmx">
+    <label>Type:</label>
+    <select name="type">
+      {% for option in options %}
+      <option value= "{{option}}">{{option}}</option>"
+      {% endfor %}
+    </select>
+    <label>Override:</label>
+    <input type="checkbox" name="force" value="1">
+    <button>Send</button>
+  </form>
+  <form action="http://localhost:5000/store_state" method="get">
+    <label>Store State:</label>
+    <label>Name:</label>
+    <input type="text" name="name">
+    <label>DMX-Adresses:</label>
+    <input type="text" hint="1,2,3,4,..." name="dmxes">
+    <label>Position</label>
+    <input type="number" name="position" value="-1">
+    <button>Send</button>
+  </form>
+  <form action="http://localhost:5000/view_state" method="get">
+    <label>View State</label>
+    <label>Position:</label>
+    <select name="position">
+      {% for value in states %}
+      <option value= "{{states.index(value)}}">{{states.index(value)}} - '{{value["name"]}}'</option>"
+      {% endfor %}
+    </select>
+    <button>Send</button>
+  </form>
+  <form action="http://localhost:5000/save" method="get">
+    <label>Save current setup</label>
+    <button>Send</button>
+  </form>
+  <form action="http://localhost:5000/load" method="get">
+    <label>Load saved setup</label>
+    <button>Send</button>
+  </form>
+  <hr>
+  <form action="http://localhost:5000/getfixture" method="get">
+    <label>Get Fixture</label>
+    <label>DMX:</label>
+    <input type="number" min="0" max="512" value="0" name="dmx">
+    <button>Send</button>
+  </form>
+  <form action="http://localhost:5000/get" method="get">
+    <label>Get:</label>
+    <label>DMX:</label>
+    <input type="number" min="0" max="512" value="0" name="dmx">
+    <button>Send</button>
+  </form>
+  <form action="http://localhost:5000/get_state_names" method="get">
+    <label>Get Names of States</label>
+    <button>Send</button>
+  </form>
+</body>
+</html>

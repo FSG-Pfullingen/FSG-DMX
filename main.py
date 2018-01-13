@@ -1,15 +1,14 @@
 from flask import Flask
-from flask import request
+from flask import request, render_template, redirect
 import json
-import dmx
+import dmx as dmxsender
 
 #Setup empty lists
 adresses = [0] * 513
 channels = [''] * 513
 #Get all usable Lights
-with open('lights.json', 'r') as f:
+with open('data/lights.json', 'r') as f:
     all_lights = json.loads(f.read())
-print all_lights
 
 #Setup Flask
 app = Flask(__name__)
@@ -21,7 +20,9 @@ def main():
     """
     Just some info Page
     """
-    return "Running go localhost:5000/set?dmx=23&value=255 to turn light 23 to full brigthness"
+    with open('data/states.json', 'r') as f:
+        states = json.loads(f.read())
+    return render_template('index.html', options=all_lights.keys(), states=states)
 
 @app.route("/set")
 def set():
@@ -36,8 +37,9 @@ def set():
         return "Invalid Value"
     #Put value in  list
     adresses[dmx] = value
-    dmx.send(adresses)
+    dmxsender.send(adresses)
     #Return Debug information
+    return redirect("http://localhost:5000/", code=302)
     return "SET:" + str(dmx) + ":" + str(value)
 
 @app.route("/get")
@@ -58,18 +60,31 @@ def setup():
     """
     global channels
     #Get all necessary values
-    dmx = getdmx(request)
+    dmx = int(request.args.get('dmx'))
     typus = request.args.get('type')
-    num = request.args.get('channels')
     force = bool(request.args.get('force', default=0))
     #See if the type of light already exists
     if typus in all_lights:
         num = len(all_lights[typus])
         attr = all_lights[typus]
     else:
-        attr = num * ['']
+        return "Light not in Database"
+    if dmx == -1:
+        counter = 0
+        glob_count = 0
+        for item in channels:
+            print str(counter) + ":" + str(glob_count)
+            if item == '':
+                counter += 1
+            else:
+                counter = 0
+            if counter == num:
+                dmx = (glob_count - counter)+1
+                print "Now on Adress: " + str(dmx)
+                break
+            glob_count += 1
     #Do you want to override existing settings?
-    if not force:
+    elif not force:
         for i in range(dmx, (dmx+num)):
             if not channels[i] == '':
                 return "Channels already in use, force with parameter force=1"
@@ -78,6 +93,7 @@ def setup():
     for i in range(num):
         channels[dmx + i] = (str(typus) + " | " + attr[i])
         print str(dmx+i) + str(channels[dmx+i])
+    return redirect("http://localhost:5000/", code=302)
     return str(channels)
 
 @app.route("/getfixture")
@@ -96,7 +112,7 @@ def store_state():
     dmxes = request.args.get("dmxes").split(",")
     pos = int(request.args.get("position", default=-1))
     name = request.args.get("name", default='')
-    with open('states.json', 'r') as f:
+    with open('data/states.json', 'r') as f:
         states = json.loads(f.read())
     savestate = {"name":name}
     for dmx in dmxes:
@@ -107,8 +123,9 @@ def store_state():
     else:
         states.append(savestate)
         pos = len(states)-1
-    with open('states.json', 'w') as f:
+    with open('data/states.json', 'w') as f:
         f.write(json.dumps(states))
+    return redirect("http://localhost:5000/", code=302)
     return "SAVED:" + str(pos)
 
 @app.route("/view_state")
@@ -118,25 +135,30 @@ def view_state():
     """
     global adresses
     pos = int(request.args.get("position", default=-1))
-    with open('states.json', 'r') as f:
+    with open('data/states.json', 'r') as f:
         states = json.loads(f.read())
     if not pos == -1 and pos < len(states):
         for adress in states[pos].keys():
             if not adress == "name":
                 print str(adress) + ":" + str(states[pos][adress])
                 adresses[int(adress)] = states[pos][adress]
-        dmx.send(adresses)
+        dmxsender.send(adresses)
+        return redirect("http://localhost:5000/", code=302)
         return "LOADED"
     return "INVALID KEY"
 
+@app.route("/get_state_names")
 def get_state_names():
     """
     Get names of all stored states
     """
-    with open('states.json', 'r') as f:
+    with open('data/states.json', 'r') as f:
         states = json.loads(f.read())
+    state_list = []
     for state in states:
-        state["name"]
+        print state
+        state_list.append(str(state["name"]) + ":" + str(states.index(state)))
+    return str(state_list)
 
 
 @app.route("/save")
@@ -145,8 +167,9 @@ def save():
     Save current setup to file (default both values and names)
     """
     filename = request.args.get("filename", default="book")
-    with open(filename + '.json', 'w') as f:
+    with open('data/' + filename + '.json', 'w') as f:
         f.write(json.dumps([adresses, channels]))
+        return redirect("http://localhost:5000/", code=302)
         return "SAVED"
 
 @app.route("/load")
@@ -156,8 +179,9 @@ def load():
     """
     global adresses
     filename = request.args.get("filename", default="book")
-    with open(filename + '.json', 'r') as f:
+    with open('data/' + filename + '.json', 'r') as f:
         adresses, channels = json.loads(f.read())
+    return redirect("http://localhost:5000/", code=302)
     return str(adresses) + str(channels)
 
 # --------------------------------Functions---------------------------------
@@ -176,5 +200,5 @@ if __name__ == '__main__':
     """
     Run the Webserver
     """
-    dmx.start()
+    dmxsender.start()
     app.run()

@@ -14,12 +14,9 @@ def start():
 def send(adresses):
     global client
     data = array.array('B', adresses)
-    print str(data)
     client.SendDmx(universe, data, DmxSent)
     wrapper.Run()
 
 def DmxSent(state):
     global wrapper
-    print "Callback"
-    print str(state)
     wrapper.Stop()
