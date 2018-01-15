@@ -22,7 +22,7 @@ def main():
     """
     with open('data/states.json', 'r') as f:
         states = json.loads(f.read())
-    return render_template('index.html', options=all_lights.keys(), states=states)
+    return render_template('index2.html', options=all_lights.keys(), states=states)
 
 @app.route("/set")
 def set():
