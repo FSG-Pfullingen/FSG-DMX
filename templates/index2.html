@@ -3,80 +3,95 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="bulma/css/bulma.css">
-  <title>Test Site</title>
+  <link rel="stylesheet" href="{{ url_for('static',filename='bulma/css/bulma.css') }}">
+  <!-- Fallback for local testing -->
+  <link rel="stylesheet" href="../static/bulma/css/bulma.css">
+  <title>DMX-Controller</title>
 </head>
 <body>
-  <h1>Test Site</h1>
-  <form action="http://localhost:5000/set" method="get">
-    <label>Set:</label>
-    <label>DMX:</label>
-    <input type="number" min="0" max="512" value="0" name="dmx">
-    <label>Value:</label>
-    <input type="range" min="0" max="255" value="127" name="value" onchange="this.form.submit()">
-  </form>
-  <form action="http://localhost:5000/setup" method="get">
-    <label>Setup:</label>
-    <label>DMX:</label>
-    <input type="number" min="-1" max="512" value="-1" name="dmx">
-    <label>Type:</label>
-    <select name="type">
-      {% for option in options %}
-      <option value= "{{option}}">{{option}}</option>"
-      {% endfor %}
-    </select>
-    <label>Override:</label>
-    <input type="checkbox" name="force" value="1">
-    <button>Send</button>
-  </form>
-  <form action="http://localhost:5000/store_state" method="get">
-    <label>Store State:</label>
-    <label>Name:</label>
-    <input type="text" name="name">
-    <label>DMX-Adresses:</label>
-    <input type="text" hint="1,2,3,4,..." name="dmxes">
-    <label>Position</label>
-    <input type="number" name="position" value="-1">
-    <button>Send</button>
-  </form>
-  <form action="http://localhost:5000/view_state" method="get">
-    <label>View State</label>
-    <label>Position:</label>
-<div class="control">
-  <div class="select">
-    <select name="position">
-      {% for value in states %}
-      <option value= "{{states.index(value)}}">{{states.index(value)}} - '{{value["name"]}}'</option>"
-      {% endfor %}
-    </select>
+  <section class="hero is-primary is-bold">
+    <div class="hero-body">
+      <h1 class="title">DMX-Controller</h1>
+    </div>
+    <div class="hero-foot">
+      <nav class="tabs is-boxed">
+        <ul>
+          <li class="is-active"><a href="#">MAIN</a></li>
+        </ul>
+      </nav>
+    </div>
+  </section>
+  <div class="tile is-ancestor">
+    <div class="tile is-vertical is-child notification">
+      <form action="http://localhost:5000/set" method="get" class="field">
+        <label class="label">Set:</label>
+        <label class="label">DMX:</label>
+        <input class="input" type="number" min="0" max="512" value="0" name="dmx">
+        <label class="label">Color:</label>
+        <input class="input" type="color" name="color" onchange="this.form.submit()">
+        <label class="label">Value:</label>
+        <input type="range" min="0" max="255" value="127" name="value" onchange="this.form.submit()">
+      </form>
+    </div>
+    <div class="tile is-vertical is-child notification">
+      <form action="http://localhost:5000/setup" method="get">
+        <label class="label">Setup:</label>
+        <label class="label">DMX:</label>
+        <input class="input" type="number" min="-1" max="512" placeholder="-1 for auto" value="-1" name="dmx">
+        <label class="label">Type:</label>
+        <select name="type">
+          {% for option in options %}
+          <option value= "{{option}}">{{option}}</option>"
+          {% endfor %}
+        </select>
+        <label class="checkbox label">Overwrite? <input type="checkbox" name="force" value="1"> Yes</label>
+        <button class="button is-link">Send</button>
+      </form>
+    </div>
+    <div class="tile is-vertical is-child notification">
+      <form action="http://localhost:5000/store_state" method="get">
+        <label class="label">Store State:</label>
+        <label class="label">Name:</label>
+        <input class="input" type="text" name="name">
+        <label class="label">DMX-Adresses:</label>
+        <input class="input" type="text" hint="1,2,3,4,..." name="dmxes">
+        <label class="label">Position</label>
+        <input class="input" type="number" name="position" value="-1">
+        <button class="button is-link">Send</button>
+      </form>
+    </div>
+    <div class="tile is-vertical is-child notification">
+      <form action="http://localhost:5000/view_state" method="get">
+        <label class="label">View State</label>
+        <label class="label">Position:</label>
+        <div class="select">
+          <select name="position">
+            {% for value in states %}
+            <option value= "{{states.index(value)}}">{{states.index(value)}} - '{{value["name"]}}'</option>"
+            {% endfor %}
+          </select>
+        </div>
+        <button class="button is-link">Send</button>
+      </form>
+    </div>
+    <div class="tile is-vertical is-child notification">
+      <form action="http://localhost:5000/save" method="get">
+        <label class="label">Save and Load current setup</label>
+        <button class="button is-link">Save</button>
+      </form>
+      <form action="http://localhost:5000/load" method="get">
+        <button class="button is-link">Load</button>
+      </form>
+    </div>
+    <div class="tile is-vertical is-child notification">
+      <form method="get" id="get-form">
+        <label class="label">Get</label>
+        <label class="label">DMX:</label>
+        <input class="input" type="number" min="0" max="512" value="0" name="dmx">
+        <button class="button is-link" onclick="document.getElementById('get-form').action = 'http://localhost:5000/get'">Value</button>
+        <button class="button is-link" onclick="document.getElementById('get-form').action = 'http://localhost:5000/getfixture'">Name</button>
+      </form>
+    </div>
   </div>
-</div>
-    <button>Send</button>
-  </form>
-  <form action="http://localhost:5000/save" method="get">
-    <label>Save current setup</label>
-    <button>Send</button>
-  </form>
-  <form action="http://localhost:5000/load" method="get">
-    <label>Load saved setup</label>
-    <button>Send</button>
-  </form>
-  <hr>
-  <form action="http://localhost:5000/getfixture" method="get">
-    <label>Get Fixture</label>
-    <label>DMX:</label>
-    <input type="number" min="0" max="512" value="0" name="dmx">
-    <button>Send</button>
-  </form>
-  <form action="http://localhost:5000/get" method="get">
-    <label>Get:</label>
-    <label>DMX:</label>
-    <input type="number" min="0" max="512" value="0" name="dmx">
-    <button>Send</button>
-  </form>
-  <form action="http://localhost:5000/get_state_names" method="get">
-    <label>Get Names of States</label>
-    <button>Send</button>
-  </form>
 </body>
 </html>

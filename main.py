@@ -24,6 +24,15 @@ def main():
         states = json.loads(f.read())
     return render_template('index2.html', options=all_lights.keys(), states=states)
 
+@app.route("/test")
+def test():
+    """
+    Just the Test Page
+    """
+    with open('data/states.json', 'r') as f:
+        states = json.loads(f.read())
+    return render_template('index.html', options=all_lights.keys(), states=states)
+
 @app.route("/set")
 def set():
     """
@@ -32,9 +41,15 @@ def set():
     #Get values
     dmx = getdmx(request)
     value = int(request.args.get('value'))
+    color = request.args.get('color', default="#000000").strip("#")
     #Check if in usable range
     if not  0 <= value <= 255:
         return "Invalid Value"
+    #Dismantle colors
+    r = int(color[0:2], 16)
+    g = int(color[2:4], 16)
+    b = int(color[4:7], 16)
+    c,m,y,k = rgb_to_cmyk(r, g, b)
     #Put value in  list
     adresses[dmx] = value
     dmxsender.send(adresses)
@@ -60,7 +75,7 @@ def setup():
     """
     global channels
     #Get all necessary values
-    dmx = int(request.args.get('dmx'))
+    dmx = int(request.args.get('dmx', default="-1"))
     typus = request.args.get('type')
     force = bool(request.args.get('force', default=0))
     #See if the type of light already exists
@@ -194,6 +209,27 @@ def getdmx(request):
         return "Invalid DMX"
     else:
         return int(dmx)
+
+def rgb_to_cmyk(r,g,b):
+    cmyk_scale = 100
+    if (r == 0) and (g == 0) and (b == 0):
+        # black
+        return 0, 0, 0, cmyk_scale
+
+    # rgb [0,255] -> cmy [0,1]
+    c = 1 - r / 255.
+    m = 1 - g / 255.
+    y = 1 - b / 255.
+
+    # extract out k [0,1]
+    min_cmy = min(c, m, y)
+    c = (c - min_cmy) / (1 - min_cmy)
+    m = (m - min_cmy) / (1 - min_cmy)
+    y = (y - min_cmy) / (1 - min_cmy)
+    k = min_cmy
+
+    # rescale to the range [0,cmyk_scale]
+    return c*cmyk_scale, m*cmyk_scale, y*cmyk_scale, k*cmyk_scale
 
 #Run!
 if __name__ == '__main__':
