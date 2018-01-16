@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="{{ url_for('static',filename='w3.css') }}">
+  <!-- Fallback for local testing -->
+  <link rel="stylesheet" href="../static/w3.css">
+  <title>DMX-Controller</title>
+</head>
+<body>
+  <div>
+    <div class="w3-orange">
+      <h1>DMX-Controller</h1>
+    </div>
+    <div class="w3-quarter w3-mobile">
+      <form class="w3-form" action="http://localhost:5000/set" method="get" class="field">
+        <label>Set:</label>
+        <label>DMX:</label>
+        <input class="w3-input w3-round w3-border w3-border-orange" type="number" min="0" max="512" value="0" name="dmx">
+        <label>Color:</label>
+        <input class="w3-input w3-round w3-border w3-border-orange" type="color" name="color" onchange="this.form.submit()">
+        <label>Value:</label>
+        <input class="w3-input w3-round w3-border w3-border-orange" type="range" min="0" max="255" value="127" name="value" onchange="this.form.submit()">
+      </form>
+    </div>
+    <div class="w3-quarter w3-mobile">
+      <form class="w3-form" action="http://localhost:5000/setup" method="get">
+        <label class="label">Setup:</label>
+        <label class="label">DMX:</label>
+        <input class="w3-input w3-round w3-border w3-border-orange" type="number" min="-1" max="512" placeholder="-1 for auto" value="-1" name="dmx">
+        <label class="label">Type:</label>
+        <select class="w3-select w3-round w3-border w3-border-orange" name="type">
+          {% for option in options %}
+          <option value= "{{option}}">{{option}}</option>"
+          {% endfor %}
+        </select>
+        <label>Overwrite? <input class="checkbox" type="checkbox" name="force" value="1"> Yes</label>
+        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange">Send</button>
+      </form>
+    </div>
+    <div class="w3-quarter w3-mobile">
+      <form class="w3-form" action="http://localhost:5000/store_state" method="get">
+        <label class="label">Store State:</label>
+        <label class="label">Name:</label>
+        <input class="w3-input w3-round w3-border w3-border-orange" type="text" name="name">
+        <label class="label">DMX-Adresses:</label>
+        <input class="w3-input w3-round w3-border w3-border-orange" type="text" hint="1,2,3,4,..." name="dmxes">
+        <label class="label">Position</label>
+        <input class="w3-input w3-round w3-border w3-border-orange" type="number" name="position" value="-1">
+        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange">Send</button>
+      </form>
+    </div>
+    <div class="w3-quarter w3-mobile">
+      <form class="w3-form" action="http://localhost:5000/view_state" method="get">
+        <label class="label">View State</label>
+        <label class="label">Position:</label>
+        <div class="select">
+          <select class="w3-select w3-round w3-border w3-border-orange" name="position">
+            {% for value in states %}
+            <option value= "{{states.index(value)}}">{{states.index(value)}} - '{{value["name"]}}'</option>"
+            {% endfor %}
+          </select>
+        </div>
+        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange">Send</button>
+      </form>
+    </div>
+    <div class="w3-half w3-mobile">
+      <form class="w3-form" action="http://localhost:5000/save" method="get">
+        <label class="label">Save and Load current setup</label>
+        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange">Save</button>
+      </form>
+      <form class="w3-form" action="http://localhost:5000/load" method="get">
+        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange">Load</button>
+      </form>
+    </div>
+    <div class="w3-half w3-mobile">
+      <form class="w3-form" method="get" id="get-form">
+        <label class="label">Get</label>
+        <label class="label">DMX:</label>
+        <input class="w3-input w3-round w3-border w3-border-orange" type="number" min="0" max="512" value="0" name="dmx">
+        <button class="button is-link" onclick="document.getElementById('get-form').action = 'http://localhost:5000/get'">Value</button>
+        <button class="button is-link" onclick="document.getElementById('get-form').action = 'http://localhost:5000/getfixture'">Name</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
