@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import request, render_template, redirect
+from flask import request, render_template, session, redirect, url_for
 import json
 import dmx as dmxsender
 
@@ -12,14 +12,13 @@ with open('data/lights.json', 'r') as f:
 
 #Setup Flask
 app = Flask(__name__)
-
-
 #--------------------------------Webservice--------------------
 @app.route("/")
-def main():
+def index():
     """
     Just some info Page
     """
+    print url_for(".index")
     with open('data/states.json', 'r') as f:
         states = json.loads(f.read())
     return render_template('index_w3css.html', channels=channels, options=all_lights.keys(), states=states)
@@ -40,7 +39,7 @@ def set():
     """
     #Get values
     dmx = getdmx(request)
-    value = int(request.args.get('value'), default="-1")
+    value = int(request.args.get('value', default="-1"))
     color = request.args.get('color', default="#000000").strip("#")
     #Check if in usable range
     #Dismantle colors
@@ -76,8 +75,7 @@ def set():
         adresses[dmx] = value
     dmxsender.send(adresses)
     #Return Debug information
-    return redirect("http://localhost:5000/", code=302)
-    return "SET:" + str(dmx) + ":" + str(value)
+    return redirect(url_for(index, _external=True))
 
 @app.route("/get")
 def get():
@@ -130,8 +128,7 @@ def setup():
     for i in range(num):
         channels[dmx + i] = (str(typus) + " | " + attr[i])
         print str(dmx+i) + str(channels[dmx+i])
-    return redirect("http://localhost:5000/", code=302)
-    return str(channels)
+    return redirect(url_for(index, _external=True))
 
 @app.route("/getfixture")
 def getfixture():
@@ -162,8 +159,7 @@ def store_state():
         pos = len(states)-1
     with open('data/states.json', 'w') as f:
         f.write(json.dumps(states))
-    return redirect("http://localhost:5000/", code=302)
-    return "SAVED:" + str(pos)
+    return redirect(url_for(index, _external=True))
 
 @app.route("/view_state")
 def view_state():
@@ -180,8 +176,7 @@ def view_state():
                 print str(adress) + ":" + str(states[pos][adress])
                 adresses[int(adress)] = states[pos][adress]
         dmxsender.send(adresses)
-        return redirect("http://localhost:5000/", code=302)
-        return "LOADED"
+        return redirect(url_for(index, _external=True))
     return "INVALID KEY"
 
 @app.route("/get_state_names")
@@ -206,8 +201,8 @@ def save():
     filename = request.args.get("filename", default="book")
     with open('data/' + filename + '.json', 'w') as f:
         f.write(json.dumps([adresses, channels]))
-        return redirect("http://localhost:5000/", code=302)
-        return "SAVED"
+        return redirect(url_for(index, _external=True))
+    return "ERROR"
 
 @app.route("/load")
 def load():
@@ -219,8 +214,8 @@ def load():
     filename = request.args.get("filename", default="book")
     with open('data/' + filename + '.json', 'r') as f:
         adresses, channels = json.loads(f.read())
-    return redirect("http://localhost:5000/", code=302)
-    return str(adresses) + str(channels)
+        return redirect(url_for(index, _external=True))
+    return "ERROR"
 
 # --------------------------------Functions---------------------------------
 def getdmx(request):
@@ -260,4 +255,4 @@ if __name__ == '__main__':
     Run the Webserver
     """
     dmxsender.start()
-    app.run()
+    app.run(host="0.0.0.0")
