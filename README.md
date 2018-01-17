@@ -1,7 +1,31 @@
 # FSG-DMX
- A System to control DMX Lights with a RaspberryPi made by the FSG-Pfullingen
+A System to control DMX Lights with a Computer/Laptop/RaspberryPi and a USB to DMX converter made by the FSG-Pfullingen. Feel free to build your own application based on the Webhooks provided, for further features or if you found a bug, please open a issue.
 
-## Usage:
+## Quickstart:
+Add to  /etc/apt/sources.list
+* Debian: ```deb   http://apt.openlighting.org/debian  squeeze main```
+* Raspian: ```deb   http://apt.openlighting.org/raspbian  wheezy main```
+
+Then Install:
+```
+apt-get update
+apt-get install ola ola-python
+```
+Clone from Github:
+```
+git clone https://github.com/FSG-Pfullingen/FSG-DMX.git
+```
+Install Python stuff:
+```
+python install.py
+```
+Start with
+```
+cd FSG-DMX
+python main.py
+```
+
+## HTML-Webhook Overview:
 All Words in [] are the parameters you have to give, all in {} are parameters you can give optionally
 * Main Page: ```url:5000/```
 Displays just the Main Page with controls and everything
@@ -23,26 +47,3 @@ Returns all names of different states and their numbers
 Save the DMX-Values and the channel names to a file with name FILENAME.json (the .json gets added automatically) (default=book.json)
 * load: ```url:5000/load?filename={FILENAME}```
 Load the DMX-Values and the channel names from a file with the name FILENAME.json (the .json gets added automatically) (default=book.json)
-
-## Installation
-### Requirements:
-Add to  /etc/apt/sources.list
-* Debian: ```deb   http://apt.openlighting.org/debian  squeeze main```
-* Raspian: ```deb   http://apt.openlighting.org/raspbian  wheezy main```
-
-Then Install:
-```
-apt-get update
-apt-get install ola ola-python
-```
-
-Run our install script:
-```
-python install.py
-```
-in the main directory of our program (Cloned from GitHub).
-### Program:
-Clone from Github:
-```
-git clone https://github.com/FSG-Pfullingen/FSG-DMX.git
-```
