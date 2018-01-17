@@ -40,11 +40,9 @@ def set():
     """
     #Get values
     dmx = getdmx(request)
-    value = int(request.args.get('value'))
+    value = int(request.args.get('value'), default="-1")
     color = request.args.get('color', default="#000000").strip("#")
     #Check if in usable range
-    if not  0 <= value <= 255:
-        return "Invalid Value"
     #Dismantle colors
     r = int(color[0:2], 16)
     g = int(color[2:4], 16)
@@ -73,6 +71,8 @@ def set():
             if name == "K":
                 adresses[count] = k
     else:
+        if not  0 <= value <= 255:
+            return "Invalid Value"
         adresses[dmx] = value
     dmxsender.send(adresses)
     #Return Debug information
