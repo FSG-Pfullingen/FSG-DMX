@@ -22,7 +22,7 @@ def main():
     """
     with open('data/states.json', 'r') as f:
         states = json.loads(f.read())
-    return render_template('index_w3css.html', options=all_lights.keys(), states=states)
+    return render_template('index_w3css.html', channels=channels, options=all_lights.keys(), states=states)
 
 @app.route("/test")
 def test():
@@ -50,8 +50,30 @@ def set():
     g = int(color[2:4], 16)
     b = int(color[4:7], 16)
     c,m,y,k = rgb_to_cmyk(r, g, b)
-    #Put value in  list
-    adresses[dmx] = value
+    fixture = channels[dmx].split(" | ")[0]
+    print fixture
+    max_count = len(all_lights[fixture])
+    print max_count
+    if r+b+c != 0:
+        for count in range(dmx, dmx+max_count):
+            name = channels[count].split(" | ")[1]
+            print name
+            if name == "R":
+                adresses[count] = r
+            if name == "G":
+                adresses[count] = g
+            if name == "B":
+                adresses[count] = b
+            if name == "C":
+                adresses[count] = c
+            if name == "M":
+                adresses[count] = m
+            if name == "Y":
+                adresses[count] = y
+            if name == "K":
+                adresses[count] = k
+    else:
+        adresses[dmx] = value
     dmxsender.send(adresses)
     #Return Debug information
     return redirect("http://localhost:5000/", code=302)
@@ -193,6 +215,7 @@ def load():
     Load the saved values and names from file
     """
     global adresses
+    global channels
     filename = request.args.get("filename", default="book")
     with open('data/' + filename + '.json', 'r') as f:
         adresses, channels = json.loads(f.read())

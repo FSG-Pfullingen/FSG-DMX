@@ -20,6 +20,60 @@
       document.getElementById(tabName).style.display = "block";
       evt.currentTarget.className += " w3-white";
     }
+
+    function reloadSliders(){
+      var form_div = document.getElementById('sliders');
+      form_div.innerHTML = "";
+      for (pos=0;pos<=16;pos++){
+        dmx = sessionStorage.getItem('slider_' + pos);
+        if (dmx != null){
+          var form = document.createElement("form");
+          form.setAttribute('class', "w3-form w3-padding");
+          form.setAttribute('action', "http://localhost:5000/set");
+          form.setAttribute('method', "get");
+          form.setAttribute('id', 'slider_' + pos);
+          form.setAttribute('style', "display:inline-block");
+          var i = document.createElement("input"); //input element, text
+          i.setAttribute('type',"range");
+          i.setAttribute('name',"value");
+          i.setAttribute('onchange', "this.form.submit()");
+          i.setAttribute('orient', "vertical");
+          i.setAttribute('class', "w3-input w3-round w3-border w3-border-orange");
+
+          var s = document.createElement("input");
+          s.setAttribute('type', "hidden");
+          s.setAttribute('name', "dmx");
+          s.setAttribute('value', dmx);
+
+          var p = document.createElement("label");
+          p.innerHTML = pos;
+
+          form.appendChild(i);
+          form.appendChild(s);
+          form.appendChild(p);
+          form_div.appendChild(form);
+      }
+    }
+    }
+
+    function clearSliders(){
+      window.sessionStorage.clear();
+      reloadSliders();
+    }
+
+    function setSlider(){
+      var dmx = parseInt(document.getElementById('sliders_dropdown').value);
+      var pos = parseInt(document.getElementById('sliders_pos').value);
+      if (pos != NaN){
+        sessionStorage.setItem('slider_' + pos, dmx);
+      }
+      reloadSliders();
+    }
+
+    window.addEventListener("load", function(event) {
+      console.log("All resources finished loading!");
+      reloadSliders();
+    });
   </script>
   <style>
     input[type=range][orient=vertical]
@@ -36,12 +90,42 @@
   <div class="w3-orange">
     <h1>DMX-Controller</h1>
     <div class="w3-bar">
-      <button class="w3-bar-item w3-button tablink w3-white" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Setup')">Setup</button>
+      <button class="w3-bar-item w3-button tablink w3-white" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Home')">Home</button>
+      <button class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Setup')">Setup</button>
       <button class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Storage')">Storage</button>
       <button class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Info')">Info</button>
     </div>
   </div>
-  <div class="tab" id='Setup'>
+  <div class="tab" id="Home">
+    <div class="w3-mobile w3-quarter">
+      <div class="w3-padding">
+        Color:
+      </div>
+      <form class="w3-form w3-padding" action="http://localhost:5000/set" method="get">
+        <input type="number" class="w3-half w3-input w3-round w3-border w3-border-orange" name="dmx" value="0">
+        <input class="w3-half w3-input w3-round w3-border w3-border-orange" type="color" name="color" onchange="this.form.submit()" style="height:42px">
+      </form>
+    </div>
+    <div class="w3-mobile w3-col" style="width:100%">
+      <div class="w3-padding">
+        Setup Sliders:
+      </div>
+      <form class="w3-form w3-padding">
+        <input type="number" class="w3-select w3-round w3-border w3-border-orange" id="sliders_pos">
+        <select class="w3-select w3-round w3-border w3-border-orange" id="sliders_dropdown" onchange="setSlider()">
+          <option value="" disabled selected>Choose your option</option>
+          {% for channel in channels %}
+          <option value= "{{channels.index(channel)}}">{{channels.index(channel)}} - {{channel}}</option>"
+          {% endfor %}
+        </select>
+      </form>
+      <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="clearSliders()">Clear</button>
+      <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="reloadSliders()">Reload</button>
+      <div id="sliders" class="w3-border w3-border-orange" onload="reloadSliders()">
+      </div>
+    </div>
+  </div>
+  <div class="tab" id='Setup' style="display:none">
     <div class="w3-mobile w3-half">
       <div class="w3-padding">
         Test:
@@ -49,8 +133,6 @@
       <form class="w3-form w3-padding" action="http://localhost:5000/set" method="get" class="field">
         <label>DMX:</label>
         <input class="w3-input w3-round w3-border w3-border-orange" type="number" min="0" max="512" value="0" name="dmx">
-        <label>Color:</label>
-        <input class="w3-input w3-round w3-border w3-border-orange" type="color" name="color" onchange="this.form.submit()">
         <label>Value:</label>
         <input class="w3-input w3-round w3-border w3-border-orange" type="range" min="0" max="255" name="value" onchange="this.form.submit()">
       </form>
@@ -92,10 +174,10 @@
       <div class="w3-padding">
         Store State:
       </div>
-      <form class="w3-form w3-padding" action="http://localhost:5000/save" method="get">
+      <form class="w3-form w3-padding" action="http://localhost:5000/save" method="get" style="display:inline-block">
         <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange">Save</button>
       </form>
-      <form class="w3-form w3-padding" action="http://localhost:5000/load" method="get">
+      <form class="w3-form w3-padding" action="http://localhost:5000/load" method="get" style="display:inline-block">
         <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange">Load</button>
       </form>
     </div>
