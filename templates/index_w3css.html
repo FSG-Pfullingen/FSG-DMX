@@ -23,21 +23,26 @@
 
     function reloadSliders(){
       var form_div = document.getElementById('sliders');
+      var set_div = document.getElementById("controls_main");
+      current = sessionStorage.getItem('fullscreen');
+      adresses = "{{ ", ".join(adresses) }}".split(", ").map(Number);
       form_div.innerHTML = "";
       for (pos=0;pos<=16;pos++){
         dmx = sessionStorage.getItem('slider_' + pos);
         if (dmx != null){
           var form = document.createElement("form");
           form.setAttribute('class', "w3-form w3-padding");
-          form.setAttribute('action', "http://localhost:5000/set");
-          form.setAttribute('method', "get");
           form.setAttribute('id', 'slider_' + pos);
           form.setAttribute('style', "display:inline-block");
           var i = document.createElement("input"); //input element, text
           i.setAttribute('type',"range");
           i.setAttribute('name',"value");
-          i.setAttribute('onchange', "this.form.submit()");
+          i.setAttribute('onchange', "sendData(this.parentElement, '{{ url_for('set') }}')");
+          if (current == 1){
+            i.setAttribute('style', "height:400px;")
+          }
           i.setAttribute('orient', "vertical");
+          i.setAttribute('value', adresses[dmx])
           i.setAttribute('class', "w3-input w3-round w3-border w3-border-orange");
 
           var s = document.createElement("input");
@@ -45,19 +50,52 @@
           s.setAttribute('name', "dmx");
           s.setAttribute('value', dmx);
 
-          var p = document.createElement("label");
-          p.innerHTML = pos;
+          var d = document.createElement("label");
+          d.innerHTML = dmx;
 
+          var p = document.createElement("label");
+          channels = "{{ ", ".join(channels) }}";
+          //console.log(channels);
+          channels = channels.split(", ");
+          //console.log(channels);
+          name = "";
+          group = "";
+          name = channels[dmx].split(" | ")[1];
+          group = channels[dmx].split(" | ")[0];
+          //console.log(name);
+          if (name == "Brightness") name="&#9728";
+          if (name == "Tilt") name="&#8597";
+          if (name == "Pan") name="&#8596";
+          p.innerHTML = name;
+
+          form.appendChild(d);
           form.appendChild(i);
           form.appendChild(s);
           form.appendChild(p);
           form_div.appendChild(form);
       }
     }
+    if (current == 1) {
+      set_div.style.display = "none";
+    } else {
+      set_div.style.display = "block";
+    }
     }
 
     function clearSliders(){
       window.sessionStorage.clear();
+
+      reloadSliders();
+    }
+
+    function fullSliders(){
+      current = sessionStorage.getItem('fullscreen');
+      console.log(current);
+      if (current == null || current == 0){
+        sessionStorage.setItem('fullscreen', 1);
+      } else{
+        sessionStorage.setItem('fullscreen', 0);
+      }
       reloadSliders();
     }
 
@@ -66,6 +104,7 @@
       var pos = parseInt(document.getElementById('sliders_pos').value);
       if (pos != NaN){
         sessionStorage.setItem('slider_' + pos, dmx);
+        document.getElementById('sliders_pos').value = pos + 1;
       }
       reloadSliders();
     }
@@ -74,7 +113,23 @@
       console.log("All resources finished loading!");
       reloadSliders();
     });
+
+    function sendData(element, send_url){
+      data = new FormData(element).entries();
+      new_url = send_url.substr(1) + "?";
+      for (var pair of data) {
+        console.log(pair[0]+ ', ' + pair[1]);
+        if (pair[0] == "color") pair[1] = encodeURIComponent(pair[1]);
+        new_url = (new_url + pair[0] + "=" + pair[1] + "&");
+      }
+      new_url = new_url.slice(0, -1);
+      console.log(new_url);
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("GET", new_url, false);
+      xhttp.send()
+    }
   </script>
+
   <style>
     input[type=range][orient=vertical]
     {
@@ -97,51 +152,54 @@
     </div>
   </div>
   <div class="tab" id="Home">
-    <div class="w3-mobile w3-quarter">
-      <div class="w3-padding">
-        Color:
+    <div id="controls_main">
+      <div class="w3-mobile w3-quarter">
+        <div class="w3-padding">
+          Color:
+        </div>
+        <form class="w3-form w3-padding">
+          <input type="number" class="w3-half w3-input w3-round w3-border w3-border-orange" name="dmx" value="0" min="0" max="512">
+          <input class="w3-half w3-input w3-round w3-border w3-border-orange" type="color" name="color" onchange="sendData(this.parentElement, '{{ url_for('set') }}')" style="height:42px">
+        </form>
       </div>
-      <form class="w3-form w3-padding" action="http://localhost:5000/set" method="get">
-        <input type="number" class="w3-half w3-input w3-round w3-border w3-border-orange" name="dmx" value="0">
-        <input class="w3-half w3-input w3-round w3-border w3-border-orange" type="color" name="color" onchange="this.form.submit()" style="height:42px">
-      </form>
-    </div>
-    <div class="w3-mobile w3-col" style="width:100%">
-      <div class="w3-padding">
-        Setup Sliders:
+      <div class="w3-mobile w3-col" style="width:100%">
+        <div class="w3-padding">
+          Setup Sliders:
+        </div>
+        <form class="w3-form w3-padding" onsubmit="setSlider()">
+          <input type="number" class="w3-select w3-round w3-border w3-border-orange" id="sliders_pos" value="0" min="0" max="16">
+          <select class="w3-select w3-round w3-border w3-border-orange" id="sliders_dropdown" onchange="setSlider()">
+            <option value="" disabled selected>Choose your option</option>
+            {% for i in range(513) %}
+            <option value= "{{ i }}">{{ i }} - {{channels[i]}}</option>"
+            {% endfor %}
+          </select>
+        </form>
+        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="clearSliders()">Clear</button>
+        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="reloadSliders()">Reload</button>
       </div>
-      <form class="w3-form w3-padding">
-        <input type="number" class="w3-select w3-round w3-border w3-border-orange" id="sliders_pos">
-        <select class="w3-select w3-round w3-border w3-border-orange" id="sliders_dropdown" onchange="setSlider()">
-          <option value="" disabled selected>Choose your option</option>
-          {% for channel in channels %}
-          <option value= "{{channels.index(channel)}}">{{channels.index(channel)}} - {{channel}}</option>"
-          {% endfor %}
-        </select>
-      </form>
-      <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="clearSliders()">Clear</button>
-      <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="reloadSliders()">Reload</button>
-      <div id="sliders" class="w3-border w3-border-orange" onload="reloadSliders()">
       </div>
-    </div>
+      <div id="sliders" onload="reloadSliders()" style="width:100%;">
+      </div>
+      <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="fullSliders()">Fullscreen</button>
   </div>
   <div class="tab" id='Setup' style="display:none">
     <div class="w3-mobile w3-half">
       <div class="w3-padding">
         Test:
       </div>
-      <form class="w3-form w3-padding" action="http://localhost:5000/set" method="get" class="field">
+      <form class="w3-form w3-padding">
         <label>DMX:</label>
         <input class="w3-input w3-round w3-border w3-border-orange" type="number" min="0" max="512" value="0" name="dmx">
         <label>Value:</label>
-        <input class="w3-input w3-round w3-border w3-border-orange" type="range" min="0" max="255" name="value" onchange="this.form.submit()">
+        <input class="w3-input w3-round w3-border w3-border-orange" type="range" min="0" max="255" name="value" onchange="sendData(this.parentElement, '{{ url_for('set') }}')">
       </form>
     </div>
     <div class="w3-mobile w3-half">
       <div class="w3-padding">
         Setup:
       </div>
-      <form class=" w3-padding w3-form" action="http://localhost:5000/setup" method="get">
+      <form class=" w3-padding w3-form">
         <label class="label">DMX:</label>
         <input class="w3-input w3-round w3-border w3-border-orange" type="number" min="-1" max="512" placeholder="-1 for auto" value="-1" name="dmx">
         <label class="label">Type:</label>
@@ -151,7 +209,7 @@
           {% endfor %}
         </select>
         <label>Overwrite? <input class="checkbox" type="checkbox" name="force" value="1"> Yes</label>
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin">Send</button>
+        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('setup') }}')">Send</button>
       </form>
     </div>
   </div>
@@ -160,25 +218,25 @@
       <div class="w3-padding">
         Store State:
       </div>
-      <form class="w3-form w3-padding" action="http://localhost:5000/store_state" method="get">
+      <form class="w3-form w3-padding">
         <label class="label">Name:</label>
         <input class="w3-input w3-round w3-border w3-border-orange" type="text" name="name">
         <label class="label">DMX-Adresses:</label>
         <input class="w3-input w3-round w3-border w3-border-orange" type="text" hint="1,2,3,4,..." name="dmxes">
         <label class="label">Position</label>
         <input class="w3-input w3-round w3-border w3-border-orange" type="number" name="position" value="-1">
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin">Send</button>
+        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('store_state') }}')">Send</button>
       </form>
     </div>
     <div class="w3-half w3-mobile">
       <div class="w3-padding">
         Store State:
       </div>
-      <form class="w3-form w3-padding" action="http://localhost:5000/save" method="get" style="display:inline-block">
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange">Save</button>
+      <form class="w3-form w3-padding" style="display:inline-block">
+        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange" onclick="sendData(this.parentElement, '{{ url_for('save') }}')">Save</button>
       </form>
-      <form class="w3-form w3-padding" action="http://localhost:5000/load" method="get" style="display:inline-block">
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange">Load</button>
+      <form class="w3-form w3-padding" style="display:inline-block">
+        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange" onclick="sendData(this.parentElement, '{{ url_for('load') }}')">Load</button>
       </form>
     </div>
   </div>
@@ -198,7 +256,7 @@
       <div class="w3-padding">
         View State:
       </div>
-      <form class="w3-form w3-padding" action="http://localhost:5000/view_state" method="get">
+      <form class="w3-form w3-padding" action={{ url_for('view_state') }} method="get">
         <label class="label">Position:</label>
         <div class="select">
           <select class="w3-select w3-round w3-border w3-border-orange" name="position">
