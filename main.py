@@ -87,6 +87,20 @@ def get():
     #Return the corresponding value
     return "GET:" + str(dmx) + ":" + str(adresses[dmx])
 
+@app.route("/new_light")
+def new_light():
+    """
+    Put a new light in the Library
+    """
+    name = request.args.get('name')
+    types = request.args.get('channels').split(",")
+    all_lights[name] = types
+    print name, all_lights[name]
+    with open('data/lights.json', 'w') as f:
+        f.write(json.dumps(all_lights))
+        return redirect(url_for('index'))
+    return "ERROR"
+
 @app.route("/setup")
 def setup():
     """
@@ -199,8 +213,10 @@ def save():
     Save current setup to file (default both values and names)
     """
     filename = request.args.get("filename", default="book")
-    with open('data/' + filename + '.json', 'w') as f:
-        f.write(json.dumps([adresses, channels]))
+    if '.json' not in filename:
+        filename += ".json"
+    with open('data/' + filename, 'w') as f:
+        f.write(json.dumps(channels))
         return redirect(url_for('index'))
     return "ERROR"
 
@@ -209,12 +225,17 @@ def load():
     """
     Load the saved values and names from file
     """
-    global adresses
     global channels
     filename = request.args.get("filename", default="book")
-    with open('data/' + filename + '.json', 'r') as f:
-        adresses, channels = json.loads(f.read())
-        print redirect(url_for('index'))
+    if '.json' not in filename:
+        filename += ".json"
+    with open('data/' + filename, 'r') as f:
+        count = 0
+        for channel in json.loads(f.read()):
+            if not channel == "":
+                print channel
+                channels[count] = channel
+            count += 1
         return redirect(url_for('index'))
     return "ERROR"
 

@@ -1,4 +1,1 @@
-{
-  "Lamp":["Brightness"],
-  "JBLED-A7":["Brightness", "R", "G", "B", "Shutter", "Tilt", "Pan"]
-}
+{"JBLED-A7": ["Brightness", "R", "G", "B", "Shutter", "Tilt", "Pan"], "LED-Bar": ["R", "G", "B"], "Lamp": ["Brightness"]}

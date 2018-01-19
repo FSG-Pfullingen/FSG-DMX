@@ -8,6 +8,7 @@
   <title>DMX-Controller</title>
   <script>
     function openTab(evt, tabName) {
+      sessionStorage.setItem('activeTab', tabName);
       var i, x, tablinks;
       x = document.getElementsByClassName("tab");
       for (i = 0; i < x.length; i++) {
@@ -18,7 +19,8 @@
           tablinks[i].className = tablinks[i].className.replace("w3-white", " ");
       }
       document.getElementById(tabName).style.display = "block";
-      evt.currentTarget.className += " w3-white";
+      //console.log("tablink_" + tabName);
+      document.getElementById("tablink_" + tabName).className += " w3-white";
     }
 
     function reloadSliders(){
@@ -110,7 +112,13 @@
     }
 
     window.addEventListener("load", function(event) {
-      console.log("All resources finished loading!");
+      //console.log("All resources finished loading!");
+      activeTab = sessionStorage.getItem('activeTab');
+      if (activeTab == null || activeTab == "null"){
+        activeTab = 'Home';
+      }
+      console.log("activeTab now:" + activeTab);
+      openTab(event, activeTab);
       reloadSliders();
     });
 
@@ -118,7 +126,7 @@
       data = new FormData(element).entries();
       new_url = send_url.substr(1) + "?";
       for (var pair of data) {
-        console.log(pair[0]+ ', ' + pair[1]);
+        //console.log(pair[0]+ ', ' + pair[1]);
         if (pair[0] == "color") pair[1] = encodeURIComponent(pair[1]);
         new_url = (new_url + pair[0] + "=" + pair[1] + "&");
       }
@@ -145,10 +153,10 @@
   <div class="w3-orange">
     <h1>DMX-Controller</h1>
     <div class="w3-bar">
-      <button class="w3-bar-item w3-button tablink w3-white" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Home')">Home</button>
-      <button class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Setup')">Setup</button>
-      <button class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Storage')">Storage</button>
-      <button class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Info')">Info</button>
+      <button id="tablink_Home" class="w3-bar-item w3-button tablink w3-white" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Home')">Home</button>
+      <button id="tablink_Setup" class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Setup')">Setup</button>
+      <button id="tablink_Storage" class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Storage')">Storage</button>
+      <button  id="tablink_Info"class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Info')">Info</button>
     </div>
   </div>
   <div class="tab" id="Home">
@@ -212,6 +220,17 @@
         <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('setup') }}')">Send</button>
       </form>
     </div>
+    <div class="w3-mobile">
+      <div class="w3-padding">
+        New Light:
+      </div>
+      <form class="w3-padding w3-form">
+        <label>Name:</label>
+        <input class="w3-input w3-round w3-border w3-border-orange" type="text" name="name">
+        <label>Channels (',' seperated)</label>
+        <input class="w3-input w3-round w3-border w3-border-orange" type="text" name="channels" placeholder="Brightness,R,G,B,Shutter,Pan,Tilt">
+        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('new_light') }}')">Create</button>
+      </form>
   </div>
   <div class="tab" id="Storage" style="display:none">
     <div class="w3-half w3-mobile">
@@ -233,9 +252,11 @@
         Store State:
       </div>
       <form class="w3-form w3-padding" style="display:inline-block">
+        <input class="w3-input w3-round w3-border w3-border-orange" value="book.json" type="text" name="filename">
         <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange" onclick="sendData(this.parentElement, '{{ url_for('save') }}')">Save</button>
       </form>
       <form class="w3-form w3-padding" style="display:inline-block">
+        <input class="w3-input w3-round w3-border w3-border-orange" value="book.json" type="text" name="filename">
         <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange" onclick="sendData(this.parentElement, '{{ url_for('load') }}')">Load</button>
       </form>
     </div>
