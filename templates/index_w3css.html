@@ -6,6 +6,8 @@
   <!-- Fallback for local testing -->
   <link rel="stylesheet" href="../static/w3.css">
   <title>DMX-Controller</title>
+  
+  <script src="../static/js/toggleFullscreen.js"></script>
   <script>
     function openTab(evt, tabName) {
       sessionStorage.setItem('activeTab', tabName);
@@ -154,6 +156,11 @@
 <body>
   <div class="w3-orange">
     <h1>DMX-Controller</h1>
+    <div class="right" style="text-align: right;">
+      <font>&harr;</font>
+      <button id="btnFullscreen" type="button">&harr;</button>
+      <img alt="FSG DMX" src="../static/img/logo_basic.png" width="200px">
+    </div>
     <div class="w3-bar">
       <button id="tablink_Home" class="w3-bar-item w3-button tablink w3-white" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Home')">Home</button>
       <button id="tablink_Setup" class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Setup')">Setup</button>
