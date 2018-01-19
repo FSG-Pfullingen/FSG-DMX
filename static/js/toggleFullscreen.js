@@ -23,7 +23,3 @@ function toggleFullscreen(elem) {
     }
   }
 }
-
-document.getElementById('btnFullscreen').addEventListener('click', function() {
-  toggleFullscreen();
-});
