@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <link rel="stylesheet" href="{{ url_for('static',filename='w3.css') }}">
-  <!-- Fallback for local testing -->
-  <link rel="stylesheet" href="../static/w3.css">
+  <link rel="icon" type="img/ico" href="{{ url_for('static', filename='img/favicon.ico') }}">
+  <link rel="shortcut icon" type="img/ico" href="{{ url_for('static', filename='img/favicon.ico') }}">
   <title>DMX-Controller</title>
 
   <script src="../static/js/toggleFullscreen.js"></script>
@@ -154,16 +154,14 @@
   </style>
 </head>
 <body>
-  <div class="w3-{{ main_color }}">
-    <h1>DMX-Controller</h1>
-    <div style="text-align: right;position:absolute;top:0px;right:0px;">
-      <button id="btnFullscreen" type="button" onclick="toggleFullscreen();">&harr;</button>
-      <img alt="FSG DMX" src="../static/img/logo_basic.png" width="150px">
-    </div>
+  <div class="w3-{{ main_color }}" style="padding-top: 1px;">
+    <img alt="FSG DMX" src="../static/img/logo_basic.png" width="150px" style="position:absolute;top:0px;right:0px;">
+    <h3 class="w3-orange">DMX-Controller</h3>
     <div class="w3-bar">
-      <button id="tablink_Home" class="w3-bar-item w3-button tablink w3-white" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Home')">Home</button>
+      <button id="tablink_Home" class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Home')">Home</button>
       <button id="tablink_Setup" class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Setup')">Setup</button>
       <button id="tablink_Storage" class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Storage')">Storage</button>
+      <button id="btnFullscreen" class="w3-bar-item w3-button w3-deep-orange" style="border-radius: 3px 3px 0px 0px;position:absolute;right:120px;" onclick="toggleFullscreen();">&#8689</button>
     </div>
   </div>
   <div class="tab" id="Home">
