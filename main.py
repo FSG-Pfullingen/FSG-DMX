@@ -25,17 +25,7 @@ def index():
         states = json.loads(f.read())
     return render_template('index_w3css.html', adresses=map(str, adresses), channels=channels, options=all_lights.keys(), states=states)
 
-@app.route("/test")
-def test():
-    """
-    Just the Test Page
-    """
-    global states
-    with open('data/states.json', 'r') as f:
-        states = json.loads(f.read())
-    return render_template('index.html', options=all_lights.keys(), states=states)
-
-@app.route("/set", methods=["POST", "GET", "PUT"])
+@app.route("/set")
 def set():
     """
     Set a DMX-Adress to a specified value

@@ -24,6 +24,7 @@ Start with
 cd FSG-DMX
 python main.py
 ```
+Then navigate to ```[YOURIP]:5000/``` in your Browser 
 
 ## HTML-Webhook Overview:
 All Words in [] are the parameters you have to give, all in {} are parameters you can give optionally
