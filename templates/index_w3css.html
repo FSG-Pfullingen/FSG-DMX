@@ -38,6 +38,8 @@
           form.setAttribute('style', "display:inline-block");
           var i = document.createElement("input"); //input element, text
           i.setAttribute('type',"range");
+          i.setAttribute('max', 255);
+          i.setAttribute('min', 0);
           i.setAttribute('name',"value");
           i.setAttribute('onchange', "sendData(this.parentElement, '{{ url_for('set') }}')");
           if (current == 1){
@@ -156,11 +158,10 @@
       <button id="tablink_Home" class="w3-bar-item w3-button tablink w3-white" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Home')">Home</button>
       <button id="tablink_Setup" class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Setup')">Setup</button>
       <button id="tablink_Storage" class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Storage')">Storage</button>
-      <button  id="tablink_Info"class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Info')">Info</button>
     </div>
   </div>
   <div class="tab" id="Home">
-    <div id="controls_main">
+    <div id="controls_main" style="width:100%;">
       <div class="w3-mobile w3-quarter">
         <div class="w3-padding">
           Color:
@@ -168,6 +169,22 @@
         <form class="w3-form w3-padding">
           <input type="number" class="w3-half w3-input w3-round w3-border w3-border-orange" name="dmx" value="0" min="0" max="512">
           <input class="w3-half w3-input w3-round w3-border w3-border-orange" type="color" name="color" onchange="sendData(this.parentElement, '{{ url_for('set') }}')" style="height:42px">
+        </form>
+      </div>
+      <div class="w3-quarter w3-mobile">
+        <div class="w3-padding">
+          View State:
+        </div>
+        <form class="w3-form w3-padding">
+          <label class="label">Position:</label>
+          <div class="select">
+            <select class="w3-select w3-round w3-border w3-border-orange" name="position">
+              {% for value in states %}
+              <option value= "{{states.index(value)}}">{{states.index(value)}} - '{{value["name"]}}'</option>"
+              {% endfor %}
+            </select>
+          </div>
+          <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin"  onclick="sendData(this.parentElement, '{{ url_for('view_state') }}')">Send</button>
         </form>
       </div>
       <div class="w3-mobile w3-col" style="width:100%">
@@ -231,6 +248,7 @@
         <input class="w3-input w3-round w3-border w3-border-orange" type="text" name="channels" placeholder="Brightness,R,G,B,Shutter,Pan,Tilt">
         <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('new_light') }}')">Create</button>
       </form>
+    </div>
   </div>
   <div class="tab" id="Storage" style="display:none">
     <div class="w3-half w3-mobile">
@@ -260,24 +278,11 @@
         <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange" onclick="sendData(this.parentElement, '{{ url_for('load') }}')">Load</button>
       </form>
     </div>
-  </div>
-  <div class="tab" id="Info" style="display:none">
     <div class="w3-half w3-mobile">
       <div class="w3-padding">
-        Get Name or Value:
+        Delete State:
       </div>
-      <form class="w3-form w3-padding" method="get" id="get-form">
-        <label class="label">DMX:</label>
-        <input class="w3-input w3-round w3-border w3-border-orange" type="number" min="0" max="512" value="0" name="dmx">
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="document.getElementById('get-form').action = 'http://localhost:5000/get'">Value</button>
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="document.getElementById('get-form').action = 'http://localhost:5000/getfixture'">Name</button>
-      </form>
-    </div>
-    <div class="w3-half w3-mobile">
-      <div class="w3-padding">
-        View State:
-      </div>
-      <form class="w3-form w3-padding" action={{ url_for('view_state') }} method="get">
+      <form class="w3-form w3-padding">
         <label class="label">Position:</label>
         <div class="select">
           <select class="w3-select w3-round w3-border w3-border-orange" name="position">
@@ -286,7 +291,7 @@
             {% endfor %}
           </select>
         </div>
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin">Send</button>
+        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('delete_state') }}')">Delete</button>
       </form>
     </div>
   </div>

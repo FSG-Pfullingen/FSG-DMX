@@ -6,6 +6,7 @@ import dmx as dmxsender
 #Setup empty lists
 adresses = [0] * 513
 channels = [''] * 513
+states = []
 #Get all usable Lights
 with open('data/lights.json', 'r') as f:
     all_lights = json.loads(f.read())
@@ -19,6 +20,7 @@ def index():
     """
     Just some info Page
     """
+    global states
     with open('data/states.json', 'r') as f:
         states = json.loads(f.read())
     return render_template('index_w3css.html', adresses=map(str, adresses), channels=channels, options=all_lights.keys(), states=states)
@@ -28,6 +30,7 @@ def test():
     """
     Just the Test Page
     """
+    global states
     with open('data/states.json', 'r') as f:
         states = json.loads(f.read())
     return render_template('index.html', options=all_lights.keys(), states=states)
@@ -144,19 +147,20 @@ def setup():
         print str(dmx+i) + str(channels[dmx+i])
     return redirect(url_for('index'))
 
+""" UNUSED
 @app.route("/getfixture")
 def getfixture():
-    """
-    Get the name of the Fixture on that DMX-Adress
-    """
+    #Get the name of the Fixture on that DMX-Adress
     dmx = getdmx(request)
     return channels[dmx]
+"""
 
 @app.route("/store_state")
 def store_state():
     """
     Store the current values for later use
     """
+    global states
     dmxes = request.args.get("dmxes").split(",")
     pos = int(request.args.get("position", default=-1))
     name = request.args.get("name", default='')
@@ -164,13 +168,33 @@ def store_state():
         states = json.loads(f.read())
     savestate = {"name":name}
     for dmx in dmxes:
-        savestate[dmx] = adresses[int(dmx)]
+        if "-" in dmx:
+            print dmx
+            fromto = dmx.split("-")
+            for addr in range(int(fromto[0]), int(fromto[1])+1):
+                print addr
+                savestate[addr] = adresses[int(addr)]
+        else:
+            savestate[dmx] = adresses[int(dmx)]
     print str(len(states)) + ":" + str(pos)
     if pos >= 0 and pos < len(states):
         states[pos] = savestate
     else:
         states.append(savestate)
         pos = len(states)-1
+    with open('data/states.json', 'w') as f:
+        f.write(json.dumps(states))
+    return redirect(url_for('index'))
+
+@app.route("/delete_state")
+def delete_state():
+    global states
+    pos = request.args.get("position")
+    print "deleting" + pos
+    with open('data/states.json', 'r') as f:
+        states = json.loads(f.read())
+    print states[int(pos)]
+    del states[int(pos)]
     with open('data/states.json', 'w') as f:
         f.write(json.dumps(states))
     return redirect(url_for('index'))
@@ -185,19 +209,21 @@ def view_state():
     with open('data/states.json', 'r') as f:
         states = json.loads(f.read())
     if not pos == -1 and pos < len(states):
+        print "Pos valid"
         for adress in states[pos].keys():
             if not adress == "name":
                 print str(adress) + ":" + str(states[pos][adress])
                 adresses[int(adress)] = states[pos][adress]
+            else:
+                print "Property Name"
         dmxsender.send(adresses)
         return redirect(url_for('index'))
     return "INVALID KEY"
 
+""" UNUSED!
 @app.route("/get_state_names")
 def get_state_names():
-    """
-    Get names of all stored states
-    """
+    #Get names of all stored states
     with open('data/states.json', 'r') as f:
         states = json.loads(f.read())
     state_list = []
@@ -205,7 +231,7 @@ def get_state_names():
         print state
         state_list.append(str(state["name"]) + ":" + str(states.index(state)))
     return str(state_list)
-
+"""
 
 @app.route("/save")
 def save():
