@@ -147,14 +147,6 @@ def setup():
         print str(dmx+i) + str(channels[dmx+i])
     return redirect(url_for('index'))
 
-""" UNUSED
-@app.route("/getfixture")
-def getfixture():
-    #Get the name of the Fixture on that DMX-Adress
-    dmx = getdmx(request)
-    return channels[dmx]
-"""
-
 @app.route("/store_state")
 def store_state():
     """
@@ -219,19 +211,6 @@ def view_state():
         dmxsender.send(adresses)
         return redirect(url_for('index'))
     return "INVALID KEY"
-
-""" UNUSED!
-@app.route("/get_state_names")
-def get_state_names():
-    #Get names of all stored states
-    with open('data/states.json', 'r') as f:
-        states = json.loads(f.read())
-    state_list = []
-    for state in states:
-        print state
-        state_list.append(str(state["name"]) + ":" + str(states.index(state)))
-    return str(state_list)
-"""
 
 @app.route("/save")
 def save():
