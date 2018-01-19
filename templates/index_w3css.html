@@ -49,7 +49,7 @@
           }
           i.setAttribute('orient', "vertical");
           i.setAttribute('value', adresses[dmx])
-          i.setAttribute('class', "w3-input w3-round w3-border w3-border-orange");
+          i.setAttribute('class', "w3-input w3-round w3-border w3-border-{{ main_color }}");
 
           var s = document.createElement("input");
           s.setAttribute('type', "hidden");
@@ -154,7 +154,7 @@
   </style>
 </head>
 <body>
-  <div class="w3-orange">
+  <div class="w3-{{ main_color }}">
     <h1>DMX-Controller</h1>
     <div style="text-align: right;position:absolute;top:0px;right:0px;">
       <button id="btnFullscreen" type="button" onclick="toggleFullscreen();">&harr;</button>
@@ -173,8 +173,8 @@
           Color:
         </div>
         <form class="w3-form w3-padding">
-          <input type="number" class="w3-half w3-input w3-round w3-border w3-border-orange" name="dmx" value="0" min="0" max="512">
-          <input class="w3-half w3-input w3-round w3-border w3-border-orange" type="color" name="color" onchange="sendData(this.parentElement, '{{ url_for('set') }}')" style="height:42px">
+          <input type="number" class="w3-half w3-input w3-round w3-border w3-border-{{ main_color }}" name="dmx" value="0" min="0" max="512">
+          <input class="w3-half w3-input w3-round w3-border w3-border-{{ main_color }}" type="color" name="color" onchange="sendData(this.parentElement, '{{ url_for('set') }}')" style="height:42px">
         </form>
       </div>
       <div class="w3-rest w3-mobile">
@@ -184,13 +184,13 @@
         <form class="w3-form w3-padding">
           <label class="label">Position:</label>
           <div class="select">
-            <select class="w3-select w3-round w3-border w3-border-orange" name="position">
+            <select class="w3-select w3-round w3-border w3-border-{{ main_color }}" name="position">
               {% for value in states %}
               <option value= "{{states.index(value)}}">{{states.index(value)}} - '{{value["name"]}}'</option>"
               {% endfor %}
             </select>
           </div>
-          <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin"  onclick="sendData(this.parentElement, '{{ url_for('view_state') }}')">Send</button>
+          <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange w3-margin"  onclick="sendData(this.parentElement, '{{ url_for('view_state') }}')">Send</button>
         </form>
       </div>
       <div class="w3-mobile w3-col" style="width:100%">
@@ -198,21 +198,21 @@
           Setup Sliders:
         </div>
         <form class="w3-form w3-padding" onsubmit="setSlider()">
-          <input type="number" class="w3-select w3-round w3-border w3-border-orange" id="sliders_pos" value="0" min="0" max="16">
-          <select class="w3-select w3-round w3-border w3-border-orange" id="sliders_dropdown" onchange="setSlider()">
+          <input type="number" class="w3-select w3-round w3-border w3-border-{{ main_color }}" id="sliders_pos" value="0" min="0" max="16">
+          <select class="w3-select w3-round w3-border w3-border-{{ main_color }}" id="sliders_dropdown" onchange="setSlider()">
             <option value="" disabled selected>Choose your option</option>
             {% for i in range(513) %}
             <option value= "{{ i }}">{{ i }} - {{channels[i]}}</option>"
             {% endfor %}
           </select>
         </form>
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="clearSliders()">Clear</button>
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="reloadSliders()">Reload</button>
+        <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange w3-margin" onclick="clearSliders()">Clear</button>
+        <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange w3-margin" onclick="reloadSliders()">Reload</button>
       </div>
       </div>
       <div id="sliders" onload="reloadSliders()" style="width:100%;">
       </div>
-      <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="fullSliders()">Fullscreen</button>
+      <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange w3-margin" onclick="fullSliders()">Fullscreen</button>
   </div>
   <div class="tab" id='Setup' style="display:none">
     <div class="w3-mobile w3-half">
@@ -221,9 +221,9 @@
       </div>
       <form class="w3-form w3-padding">
         <label>DMX:</label>
-        <input class="w3-input w3-round w3-border w3-border-orange" type="number" min="0" max="512" value="0" name="dmx">
+        <input class="w3-input w3-round w3-border w3-border-{{ main_color }}" type="number" min="0" max="512" value="0" name="dmx">
         <label>Value:</label>
-        <input class="w3-input w3-round w3-border w3-border-orange" type="range" min="0" max="255" name="value" onchange="sendData(this.parentElement, '{{ url_for('set') }}')">
+        <input class="w3-input w3-round w3-border w3-border-{{ main_color }}" type="range" min="0" max="255" name="value" onchange="sendData(this.parentElement, '{{ url_for('set') }}')">
       </form>
     </div>
     <div class="w3-mobile w3-half">
@@ -232,15 +232,15 @@
       </div>
       <form class=" w3-padding w3-form">
         <label class="label">DMX:</label>
-        <input class="w3-input w3-round w3-border w3-border-orange" type="number" min="-1" max="512" placeholder="-1 for auto" value="-1" name="dmx">
+        <input class="w3-input w3-round w3-border w3-border-{{ main_color }}" type="number" min="-1" max="512" placeholder="-1 for auto" value="-1" name="dmx">
         <label class="label">Type:</label>
-        <select class="w3-select w3-round w3-border w3-border-orange" name="type">
+        <select class="w3-select w3-round w3-border w3-border-{{ main_color }}" name="type">
           {% for option in options %}
           <option value= "{{option}}">{{option}}</option>"
           {% endfor %}
         </select>
         <label>Overwrite? <input class="checkbox" type="checkbox" name="force" value="1"> Yes</label>
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('setup') }}')">Send</button>
+        <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('setup') }}')">Send</button>
       </form>
     </div>
     <div class="w3-mobile">
@@ -249,10 +249,10 @@
       </div>
       <form class="w3-padding w3-form">
         <label>Name:</label>
-        <input class="w3-input w3-round w3-border w3-border-orange" type="text" name="name">
+        <input class="w3-input w3-round w3-border w3-border-{{ main_color }}" type="text" name="name">
         <label>Channels (',' seperated)</label>
-        <input class="w3-input w3-round w3-border w3-border-orange" type="text" name="channels" placeholder="Brightness,R,G,B,Shutter,Pan,Tilt">
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('new_light') }}')">Create</button>
+        <input class="w3-input w3-round w3-border w3-border-{{ main_color }}" type="text" name="channels" placeholder="Brightness,R,G,B,Shutter,Pan,Tilt">
+        <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('new_light') }}')">Create</button>
       </form>
     </div>
   </div>
@@ -263,12 +263,12 @@
       </div>
       <form class="w3-form w3-padding">
         <label class="label">Name:</label>
-        <input class="w3-input w3-round w3-border w3-border-orange" type="text" name="name">
+        <input class="w3-input w3-round w3-border w3-border-{{ main_color }}" type="text" name="name">
         <label class="label">DMX-Adresses:</label>
-        <input class="w3-input w3-round w3-border w3-border-orange" type="text" hint="1,2,3,4,..." name="dmxes">
+        <input class="w3-input w3-round w3-border w3-border-{{ main_color }}" type="text" hint="1,2,3,4,..." name="dmxes">
         <label class="label">Position</label>
-        <input class="w3-input w3-round w3-border w3-border-orange" type="number" name="position" value="-1">
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('store_state') }}')">Send</button>
+        <input class="w3-input w3-round w3-border w3-border-{{ main_color }}" type="number" name="position" value="-1">
+        <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('store_state') }}')">Send</button>
       </form>
     </div>
     <div class="w3-half w3-mobile">
@@ -276,12 +276,12 @@
         Store State:
       </div>
       <form class="w3-form w3-padding" style="display:inline-block">
-        <input class="w3-input w3-round w3-border w3-border-orange" value="book.json" type="text" name="filename">
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange" onclick="sendData(this.parentElement, '{{ url_for('save') }}')">Save</button>
+        <input class="w3-input w3-round w3-border w3-border-{{ main_color }}" value="book.json" type="text" name="filename">
+        <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange" onclick="sendData(this.parentElement, '{{ url_for('save') }}')">Save</button>
       </form>
       <form class="w3-form w3-padding" style="display:inline-block">
-        <input class="w3-input w3-round w3-border w3-border-orange" value="book.json" type="text" name="filename">
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange" onclick="sendData(this.parentElement, '{{ url_for('load') }}')">Load</button>
+        <input class="w3-input w3-round w3-border w3-border-{{ main_color }}" value="book.json" type="text" name="filename">
+        <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange" onclick="sendData(this.parentElement, '{{ url_for('load') }}')">Load</button>
       </form>
     </div>
     <div class="w3-half w3-mobile">
@@ -291,13 +291,13 @@
       <form class="w3-form w3-padding">
         <label class="label">Position:</label>
         <div class="select">
-          <select class="w3-select w3-round w3-border w3-border-orange" name="position">
+          <select class="w3-select w3-round w3-border w3-border-{{ main_color }}" name="position">
             {% for value in states %}
             <option value= "{{states.index(value)}}">{{states.index(value)}} - '{{value["name"]}}'</option>"
             {% endfor %}
           </select>
         </div>
-        <button class="w3-button w3-white w3-round w3-border-orange w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('delete_state') }}')">Delete</button>
+        <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('delete_state') }}')">Delete</button>
       </form>
     </div>
   </div>

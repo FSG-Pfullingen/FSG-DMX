@@ -23,7 +23,8 @@ def index():
     global states
     with open('data/states.json', 'r') as f:
         states = json.loads(f.read())
-    return render_template('index_w3css.html', adresses=map(str, adresses), channels=channels, options=all_lights.keys(), states=states)
+    # COLORS: https://www.w3schools.com/w3css/w3css_colors.asp
+    return render_template('index_w3css.html', main_color="orange", adresses=map(str, adresses), channels=channels, options=all_lights.keys(), states=states)
 
 @app.route("/set")
 def set():
