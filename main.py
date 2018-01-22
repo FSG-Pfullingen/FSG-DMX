@@ -32,7 +32,7 @@ def set():
     Set a DMX-Adress to a specified value
     """
     #Get values
-    dmx = int(request.args.get('dmx'))
+    dmx = getdmx(request)
     value = int(request.args.get('value', default="-1"))
     color = request.args.get('color', default="#000000").strip("#")
     #Check if in usable range
@@ -42,9 +42,7 @@ def set():
     b = int(color[4:7], 16)
     c,m,y,k = rgb_to_cmyk(r, g, b)
     fixture = channels[dmx].split(" | ")[0]
-    print fixture
     max_count = len(all_lights[fixture])
-    print max_count
     if r+b+c != 0:
         for count in range(dmx, dmx+max_count):
             name = channels[count].split(" | ")[1]
@@ -103,7 +101,7 @@ def setup():
     """
     global channels
     #Get all necessary values
-    dmx = int(request.args.get('dmx', default="-1"))
+    dmx = getdmx(request)
     typus = request.args.get('type')
     force = bool(request.args.get('force', default=0))
     #See if the type of light already exists
@@ -203,6 +201,28 @@ def view_state():
         return redirect(url_for('index'))
     return "INVALID KEY"
 
+@app.route("/set_keyframe")
+def set_keyframe():
+    dmx_pan = getdmx(request)
+    dmx_tilt = dmx_pan + 1
+    value_pan = channels[dmx_pan]
+    value_tilt = channels[dmx_tilt]
+    with open('data/keyframes.json', 'r') as f:
+        keyframes = json.loads(f.read())
+    keyframes.append((value_pan, value_tilt))
+    with open('data/keyframes.json', 'w') as f:
+        f.write(json.dumps(keyframes))
+        return redirect(url_for('index'))
+
+@app.route("play_keyframes")
+def play_keyframes():
+    dmx_pan = getdmx(request)
+    dmx_tilt = dmx_pan + 1
+    speed = request.args.get("speed", default="1")
+    with open('data/keyframes.json', 'r') as f:
+        keyframes = json.loads(f.read())
+    #Interpolate the values to fit in 100ms timer
+
 @app.route("/save")
 def save():
     """
@@ -240,11 +260,11 @@ def getdmx(request):
     """
     Get and validate the dmx adress
     """
-    dmx = request.args.get('dmx')
-    if not 0 <= int(dmx) <= 512:
+    dmx = int(request.args.get('dmx', default="-1"))
+    if not -1 <= dmx <= 512:
         return "Invalid DMX"
     else:
-        return int(dmx)
+        return dmx
 
 def rgb_to_cmyk(r,g,b):
     cmyk_scale = 100
@@ -273,4 +293,4 @@ if __name__ == '__main__':
     Run the Webserver
     """
     dmxsender.start()
-    app.run(host="10.16.0.25", port=5000)
+    app.run(host="0.0.0.0", port=5000)
