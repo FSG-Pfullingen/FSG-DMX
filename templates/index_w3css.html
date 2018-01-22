@@ -7,8 +7,13 @@
   <link rel="shortcut icon" type="img/ico" href="{{ url_for('static', filename='img/favicon.ico') }}">
   <title>DMX-Controller</title>
 
-  <script src="../static/js/toggleFullscreen.js"></script>
+  <script src="{{ url_for('static', filename='js/toggleFullscreen.js') }}"></script>
   <script>
+    channels = [];
+    adresses = [];
+    all_lights = [];
+    states = [];
+
     function openTab(evt, tabName) {
       sessionStorage.setItem('activeTab', tabName);
       var i, x, tablinks;
@@ -29,7 +34,6 @@
       var form_div = document.getElementById('sliders');
       var set_div = document.getElementById("controls_main");
       current = sessionStorage.getItem('fullscreen');
-      adresses = "{{ ", ".join(adresses) }}".split(", ").map(Number);
       form_div.innerHTML = "";
       for (pos=0;pos<=16;pos++){
         dmx = sessionStorage.getItem('slider_' + pos);
@@ -60,10 +64,6 @@
           d.innerHTML = dmx;
 
           var p = document.createElement("label");
-          channels = "{{ ", ".join(channels) }}";
-          //console.log(channels);
-          channels = channels.split(", ");
-          //console.log(channels);
           name = "";
           group = "";
           name = channels[dmx].split(" | ")[1];
@@ -90,7 +90,6 @@
 
     function clearSliders(){
       window.sessionStorage.clear();
-
       reloadSliders();
     }
 
@@ -137,6 +136,15 @@
       new_url = new_url.slice(0, -1);
       console.log(new_url);
       var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          response = json.parse(this.responseText);
+          response[0] = channels;
+          response[1] = adresses;
+          response[2] = all_lights;
+          response[3] = states;
+       }
+      };
       xhttp.open("GET", new_url, false);
       xhttp.send()
     }
@@ -161,6 +169,7 @@
       <button id="tablink_Home" class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Home')">Home</button>
       <button id="tablink_Setup" class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Setup')">Setup</button>
       <button id="tablink_Storage" class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Storage')">Storage</button>
+      <button id="tablink_Storage" class="w3-bar-item w3-button tablink" style="border-radius: 3px 3px 0px 0px" onclick="openTab(event, 'Test')">Test</button>
       <button id="btnFullscreen" class="w3-bar-item w3-button w3-deep-orange" style="border-radius: 3px 3px 0px 0px;position:absolute;right:120px;" onclick="toggleFullscreen();">&#8689</button>
     </div>
   </div>
@@ -183,9 +192,14 @@
           <label class="label">Position:</label>
           <div class="select">
             <select class="w3-select w3-round w3-border w3-border-{{ main_color }}" name="position">
-              {% for value in states %}
-              <option value= "{{states.index(value)}}">{{states.index(value)}} - '{{value["name"]}}'</option>"
-              {% endfor %}
+              <script>
+              for (i=0;i<adresses.length;i++){
+                var s = document.createElement("option");
+                s.setAttribute('value', adresses[i]);
+                s.innerHTML = i + " - " + adresses[i];
+                this.appendChild(s);
+              }
+              </script>
             </select>
           </div>
           <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange w3-margin"  onclick="sendData(this.parentElement, '{{ url_for('view_state') }}')">Send</button>
@@ -271,15 +285,15 @@
     </div>
     <div class="w3-half w3-mobile">
       <div class="w3-padding">
-        Store State:
+        Save/Load Ficture Configuration:
       </div>
       <form class="w3-form w3-padding" style="display:inline-block">
         <input class="w3-input w3-round w3-border w3-border-{{ main_color }}" value="book.json" type="text" name="filename">
-        <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange" onclick="sendData(this.parentElement, '{{ url_for('save') }}')">Save</button>
+        <button type="button" class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange" onclick="sendData(this.parentElement, '{{ url_for('save') }}')">Save</button>
       </form>
       <form class="w3-form w3-padding" style="display:inline-block">
         <input class="w3-input w3-round w3-border w3-border-{{ main_color }}" value="book.json" type="text" name="filename">
-        <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange" onclick="sendData(this.parentElement, '{{ url_for('load') }}')">Load</button>
+        <button type="button" class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange" onclick="sendData(this.parentElement, '{{ url_for('load') }}')">Load</button>
       </form>
     </div>
     <div class="w3-half w3-mobile">
@@ -297,6 +311,26 @@
         </div>
         <button class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('delete_state') }}')">Delete</button>
       </form>
+    </div>
+  </div>
+  <div class="tab" id="Test">
+    <div class="w3-mobile">
+      <div class="w3-padding">
+        Store State:
+      </div>
+      <form class="w3-form w3-padding">
+      <table>
+        {% for count in range(513) %}
+        {% if channels[count] != "" %}
+        <tr>
+          <th>{{ count }} - {{ channels[count] }}</th>
+          <th><input type="checkbox"></th>
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </table>
+      <button style="position:fixed;right:1%;top:40%;" class="w3-button w3-white w3-round w3-border-{{ main_color }} w3-border w3-hover-orange w3-margin" onclick="sendData(this.parentElement, '{{ url_for('store_state') }}')">Save</button>
+    </form>
     </div>
   </div>
 </body>

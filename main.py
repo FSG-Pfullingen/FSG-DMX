@@ -69,7 +69,7 @@ def set():
         adresses[dmx] = value
     dmxsender.send(adresses)
     #Return Debug information
-    return redirect(url_for('index'))
+    return json.loads([channels, adresses, all_lights.keys(), states])
 
 @app.route("/get")
 def get():
@@ -92,7 +92,7 @@ def new_light():
     print name, all_lights[name]
     with open('data/lights.json', 'w') as f:
         f.write(json.dumps(all_lights))
-        return redirect(url_for('index'))
+        return json.loads([channels, adresses, all_lights.keys(), states])
     return "ERROR"
 
 @app.route("/setup")
@@ -136,7 +136,7 @@ def setup():
     for i in range(num):
         channels[dmx + i] = (str(typus) + " | " + attr[i])
         print str(dmx+i) + str(channels[dmx+i])
-    return redirect(url_for('index'))
+    return json.loads([channels, adresses, all_lights.keys(), states])
 
 @app.route("/store_state")
 def store_state():
@@ -167,7 +167,7 @@ def store_state():
         pos = len(states)-1
     with open('data/states.json', 'w') as f:
         f.write(json.dumps(states))
-    return redirect(url_for('index'))
+    return json.loads([channels, adresses, all_lights.keys(), states])
 
 @app.route("/delete_state")
 def delete_state():
@@ -180,7 +180,7 @@ def delete_state():
     del states[int(pos)]
     with open('data/states.json', 'w') as f:
         f.write(json.dumps(states))
-    return redirect(url_for('index'))
+    return json.loads([channels, adresses, all_lights.keys(), states])
 
 @app.route("/view_state")
 def view_state():
@@ -200,7 +200,7 @@ def view_state():
             else:
                 print "Property Name"
         dmxsender.send(adresses)
-        return redirect(url_for('index'))
+        return json.loads([channels, adresses, all_lights.keys(), states])
     return "INVALID KEY"
 
 @app.route("/save")
@@ -213,7 +213,7 @@ def save():
         filename += ".json"
     with open('data/' + filename, 'w') as f:
         f.write(json.dumps(channels))
-        return redirect(url_for('index'))
+        return json.loads([channels, adresses, all_lights.keys(), states])
     return "ERROR"
 
 @app.route("/load")
@@ -232,8 +232,12 @@ def load():
                 print channel
                 channels[count] = channel
             count += 1
-        return redirect(url_for('index'))
+        return json.loads([channels, adresses, all_lights.keys(), states])
     return "ERROR"
+
+@app.route("/channels")
+def view_channels():
+    return json.dumps(channels)
 
 # --------------------------------Functions---------------------------------
 def getdmx(request):
@@ -273,4 +277,4 @@ if __name__ == '__main__':
     Run the Webserver
     """
     dmxsender.start()
-    app.run(host="10.16.0.25", port=5000)
+    app.run(host="0.0.0.0", port=5000)
