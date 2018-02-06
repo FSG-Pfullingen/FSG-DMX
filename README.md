@@ -14,6 +14,7 @@ apt-get install ola ola-python
 Clone from Github:
 ```
 git clone https://github.com/FSG-Pfullingen/FSG-DMX.git
+cd FSG-DMX
 ```
 Install Python stuff:
 ```
@@ -21,7 +22,6 @@ python install.py
 ```
 Start with
 ```
-cd FSG-DMX
 python main.py
 ```
 Then navigate to ```[YOURIP]:5000/``` in your Browser 

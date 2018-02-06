@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import request, render_template, session, redirect, url_for
+from flask import request, render_template, session, redirect, url_for, Response
 import json
 import dmx as dmxsender
 
@@ -69,7 +69,7 @@ def set():
         adresses[dmx] = value
     dmxsender.send(adresses)
     #Return Debug information
-    return json.loads([channels, adresses, all_lights.keys(), states])
+    return json_back()
 
 @app.route("/get")
 def get():
@@ -92,7 +92,7 @@ def new_light():
     print name, all_lights[name]
     with open('data/lights.json', 'w') as f:
         f.write(json.dumps(all_lights))
-        return json.loads([channels, adresses, all_lights.keys(), states])
+        return json_back()
     return "ERROR"
 
 @app.route("/setup")
@@ -136,7 +136,7 @@ def setup():
     for i in range(num):
         channels[dmx + i] = (str(typus) + " | " + attr[i])
         print str(dmx+i) + str(channels[dmx+i])
-    return json.loads([channels, adresses, all_lights.keys(), states])
+    return json_back()
 
 @app.route("/store_state")
 def store_state():
@@ -167,7 +167,7 @@ def store_state():
         pos = len(states)-1
     with open('data/states.json', 'w') as f:
         f.write(json.dumps(states))
-    return json.loads([channels, adresses, all_lights.keys(), states])
+    return json_back()
 
 @app.route("/delete_state")
 def delete_state():
@@ -180,7 +180,7 @@ def delete_state():
     del states[int(pos)]
     with open('data/states.json', 'w') as f:
         f.write(json.dumps(states))
-    return json.loads([channels, adresses, all_lights.keys(), states])
+    return json_back()
 
 @app.route("/view_state")
 def view_state():
@@ -200,7 +200,7 @@ def view_state():
             else:
                 print "Property Name"
         dmxsender.send(adresses)
-        return json.loads([channels, adresses, all_lights.keys(), states])
+        return json_back()
     return "INVALID KEY"
 
 @app.route("/save")
@@ -213,7 +213,7 @@ def save():
         filename += ".json"
     with open('data/' + filename, 'w') as f:
         f.write(json.dumps(channels))
-        return json.loads([channels, adresses, all_lights.keys(), states])
+        return json_back()
     return "ERROR"
 
 @app.route("/load")
@@ -232,7 +232,7 @@ def load():
                 print channel
                 channels[count] = channel
             count += 1
-        return json.loads([channels, adresses, all_lights.keys(), states])
+        return json_back()
     return "ERROR"
 
 @app.route("/channels")
@@ -270,6 +270,9 @@ def rgb_to_cmyk(r,g,b):
 
     # rescale to the range [0,cmyk_scale]
     return c*cmyk_scale, m*cmyk_scale, y*cmyk_scale, k*cmyk_scale
+
+def json_back():
+	return Response(json.dumps([channels, adresses, all_lights.keys(), states], separators=(',',':')), mimetype="application/json")
 
 #Run!
 if __name__ == '__main__':
