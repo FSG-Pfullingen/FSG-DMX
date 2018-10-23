@@ -24,7 +24,7 @@ def index():
     with open('data/states.json', 'r') as f:
         states = json.loads(f.read())
     # COLORS: https://www.w3schools.com/w3css/w3css_colors.asp
-    return render_template('index_w3css.html', main_color="orange", adresses=map(str, adresses), channels=channels, options=all_lights.keys(), states=states)
+    return render_template('UI.html', main_color="orange", adresses=map(str, adresses), channels=channels, options=all_lights.keys(), states=states)
 
 @app.route("/set")
 def set():
@@ -43,10 +43,22 @@ def set():
     c,m,y,k = rgb_to_cmyk(r, g, b)
     fixture = channels[dmx].split(" | ")[0]
     print fixture
+    """
     max_count = len(all_lights[fixture])
     print max_count
-    if r+b+c != 0:
-        for count in range(dmx, dmx+max_count):
+    """
+    prev_fix = fixture
+    if r+g+b != 0:
+        count = -1
+        while(True):
+            if count >= 512:
+                break
+            count += 1
+            if channels[count] == "":
+                continue
+            fixture = channels[count].split(" | ")[0]
+            if fixture != prev_fix:
+                continue
             name = channels[count].split(" | ")[1]
             print name
             if name == "R":
@@ -74,12 +86,10 @@ def set():
 @app.route("/get")
 def get():
     """
-    Get the currently stored value for that DMX-Adress
+    Get the current state of the program
     """
-    #Get DMX-Adress
-    dmx = getdmx(request)
     #Return the corresponding value
-    return "GET:" + str(dmx) + ":" + str(adresses[dmx])
+    return json_back()
 
 @app.route("/new_light")
 def new_light():
@@ -105,6 +115,7 @@ def setup():
     #Get all necessary values
     dmx = int(request.args.get('dmx', default="-1"))
     typus = request.args.get('type')
+    custom_name = request.args.get('name', default="")
     force = bool(request.args.get('force', default=0))
     #See if the type of light already exists
     if typus in all_lights:
@@ -112,29 +123,18 @@ def setup():
         attr = all_lights[typus]
     else:
         return "Light not in Database"
-    if dmx == -1:
-        counter = 0
-        glob_count = 0
-        for item in channels:
-            print str(counter) + ":" + str(glob_count)
-            if item == '':
-                counter += 1
-            else:
-                counter = 0
-            if counter == num:
-                dmx = (glob_count - counter)+1
-                print "Now on Adress: " + str(dmx)
-                break
-            glob_count += 1
-    #Do you want to override existing settings?
-    elif not force:
+
+    if not force:
         for i in range(dmx, (dmx+num)):
             if not channels[i] == '':
                 return "Channels already in use, force with parameter force=1"
                 break
+
+    if custom_name == "":
+        custom_name = typus + str(dmx)
     #Setup the name channels
     for i in range(num):
-        channels[dmx + i] = (str(typus) + " | " + attr[i])
+        channels[dmx + i] = (str(custom_name) + " | " + attr[i])
         print str(dmx+i) + str(channels[dmx+i])
     return json_back()
 

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="{{ url_for('static',filename='w3.css') }}">
+        <link rel="icon" type="img/ico" href="{{ url_for('static', filename='img/favicon.ico') }}">
+        <link rel="shortcut icon" type="img/ico" href="{{ url_for('static', filename='img/favicon.ico') }}">
+        <meta content="width=device-width, initial-scale=1.0, maximum_scale=1.0, user-scalable=0, shrink-to-fit=no" name="viewport">
+        <title>DMX-Controller</title>
+        <script type="text/javascript">
+            // Global Variables
+            var current_number = 0
+            var current_name = ""
+            var disable_empty = false
+            var current_state = 0
+            var channels = []
+            var adresses = []
+            var all_lights = []
+            var states = []
+            var newvalevent = new Event('newval')
+
+            // --------------------------Load or New-----------------------
+            function get_filenames(element){
+                var files = ["mensa"]
+                element.innerHTML = "<h3>Choose Preset or Custom then press 'Next'</h3>"
+                for (file of files){
+                    var s = document.createElement("button")
+                    s.setAttribute('class', "w3-button w3-orange")
+                    s.setAttribute('style', "height:100px;width:100px;")
+                    s.setAttribute('onclick', "load(this)")
+                    s.innerHTML = file
+                    element.appendChild(s)
+                }
+                element.innerHTML += "<button class='w3-button w3-orange' style='height:100px;width:100px' onclick='display_setup(this.parentElement)'>Custom</button>"
+                element.innerHTML += "<button class='w3-button w3-orange' style='height:100px;width:100px' onclick='display_sliders(this.parentElement)'>Next</button>"
+            }
+
+            function load(element){
+                var name = element.innerHTML
+                console.log("Opening " + name)
+                sendData([["filename", name]], "{{ url_for('load') }}")
+            }
+
+            function display_setup(element){
+                element.style.display = 'none'
+                document.getElementById("lamp_setup").style.display = 'block'
+                check_available(document.getElementById('lamp_setup'))
+            }
+            // ------------------------------------------------------------
+
+            // --------------------------Setup Site------------------------
+            function setup(element){
+                var value = parseInt(element.innerHTML)
+                document.getElementById("setup_modal").style.display = 'block'
+                current_number = value
+            }
+
+            function open_name(element){
+                var name = element.innerHTML
+                document.getElementById("setup_modal").style.display = 'none'
+                document.getElementById("name_modal").style.display = 'block'
+                current_name = name
+            }
+
+            function lamp(element){
+                var input_element = element.getElementsByTagName('input')[0];
+                var custom_name = input_element.value
+                var adress = current_number.toString() // Would maybe work without to String
+                console.log("Setting up lamp " + current_name + " on adress " + adress + " with custom name " + custom_name)
+                if(custom_name == "") custom_name = current_name + "_" + adress.toString()
+                channels[adress] = custom_name
+                sendData([["dmx", adress], ["type", current_name], ["name", custom_name]], "{{ url_for('setup') }}")
+                document.getElementById('name_modal').style.display='none'
+                check_available(document.getElementById("lamp_setup"))
+            }
+
+            function check_available(element){
+                console.log("Disable?" + disable_empty)
+                var command
+                if (disable_empty) command = "setSlider(this)"
+                else command = "setup(this)"
+                element.innerHTML = ""
+                var i
+                for (i=0;i<channels.length;i++){
+                    var s = document.createElement("button")
+                    s.setAttribute('class', "w3-button w3-orange")
+                    s.setAttribute('style', "height:100px;width:100px;")
+                    s.setAttribute('onclick', command)
+                    //console.log(":" + channels[i] + ":")
+                    if (channels[i] != ""){
+                        if (disable_empty == false) s.setAttribute('disabled', "")
+                        s.innerHTML = i + " - " + channels[i]
+                    } else{
+                        if (disable_empty == true) s.setAttribute('disabled', "")
+                        s.innerHTML = i
+                    }
+                    element.appendChild(s)
+                }
+                var s = document.createElement("button")
+                s.setAttribute('class', "w3-button w3-orange")
+                s.setAttribute('style', "height:100px;width:100px;")
+                s.setAttribute('onclick', "display_sliders(this.parentElement)")
+                s.innerHTML = "Next"
+                element.appendChild(s)
+            }
+
+            function display_sliders(element){
+                element.style.display = 'none'
+                document.getElementById("main_view").style.display = 'block'
+                reloadSliders()
+            }
+            // --------------------------------------------------------------------------
+
+            // -------------------------Sliders-------------------------------------------------
+            function setSlider(element){
+                var dmx = parseInt(element.innerHTML.split(" - ")[0])
+                var sliders = JSON.parse(sessionStorage.getItem('sliders'))
+                if (sliders == null){
+                    pos = 0
+                    sliders = []
+                } else {
+                    var pos = sliders.length+1
+                }
+                sliders.push(dmx)
+                sessionStorage.setItem("sliders", JSON.stringify(sliders))
+                display_sliders(document.getElementById("lamp_setup"))
+                reloadSliders()
+            }
+
+            function reloadSliders(){
+                var div = document.getElementById('sliders')
+                div.innerHTML = ""
+                var current_div = document.createElement('div')
+                current_div.setAttribute("id", "states_container")
+                current_div.setAttribute("class", "w3-container w3-border w3-border-orange w3-mobile")
+                current_div.setAttribute("style", "display:inline-block")
+                current_div.innerHTML += "<h3 class='w3-center'>States</h3>"
+                current_div.innerHTML += "<button class='w3-button w3-orange' style='height:100px;width:100px' onclick='prev_state()'>Previous</button>"
+                current_div.innerHTML += "<button class='w3-button w3-orange' style='height:100px;width:100px' onclick='next_state()'>Next</button>"
+                current_div.innerHTML += "<button class='w3-button w3-orange' style='height:100px;width:100px' onclick='display_save_state()'>Single</button>"
+                current_div.innerHTML += "<button class='w3-button w3-orange' style='height:100px;width:100px' onclick='save_state()'>Save</button>"
+                div.appendChild(current_div)
+                var setup = JSON.parse(sessionStorage.getItem("sliders"))
+                var current_div = undefined
+                for(var dmx of setup){
+                    dmx = parseInt(dmx)
+                    //console.log(dmx)
+                    name = ""
+                    group = ""
+                    //console.log(dmx)
+                    //console.log(channels[dmx])
+                    name = channels[dmx].split(" | ")[1]
+                    group = channels[dmx].split(" | ")[0]
+                    if (document.getElementById("slider_div_" + group) == null){
+                        current_div = document.createElement('div')
+                        current_div.setAttribute("id", "slider_div_" + group)
+                        current_div.setAttribute("class", "w3-container w3-border w3-border-orange w3-mobile")
+                        current_div.setAttribute("style", "display:inline-block")
+                        var color = document.createElement('input')
+                        color.setAttribute("class", "w3-input w3-border w3-border-orange")
+                        color.setAttribute("type", "color")
+                        color.setAttribute("onchange", "sendData([['dmx', " + dmx.toString() + "], ['color', this.value]], '{{ url_for('set') }}')")
+                        color.setAttribute("style", "height:50px")
+                        var headline = document.createElement("h3")
+                        headline.innerHTML = group
+                        headline.setAttribute("class", "w3-center")
+                        current_div.appendChild(headline)
+                        current_div.appendChild(color)
+                        div.append(current_div)
+                    } else current_div = document.getElementById("slider_div_" + group)
+                    //console.log(name)
+                    if (name == "Brightness") name="&#9728"
+                    if (name == "Tilt") name="&#8597"
+                    if (name == "Pan") name="&#8596"
+                    var i = document.createElement("input") //input element, text
+                    i.setAttribute('type',"range")
+                    i.setAttribute('max', 255)
+                    i.setAttribute('min', 0)
+                    i.setAttribute('onchange', "sendData([['dmx', " + dmx + "], ['value', this.value]], '{{ url_for('set') }}')")
+                    i.setAttribute('orient', "vertical")
+                    i.setAttribute('value', adresses[dmx])
+                    i.setAttribute('class', "w3-input")
+                    i.setAttribute('style', 'display:inline-block');
+
+                    var label_dmx = document.createElement("label")
+                    label_dmx.innerHTML = "| " + dmx.toString()
+
+                    var label_name = document.createElement("label")
+                    label_name.innerHTML = name + " |"
+
+                    current_div.appendChild(label_dmx)
+                    current_div.appendChild(i)
+                    current_div.appendChild(label_name)
+                }
+                div.innerHTML += "<button class='w3-button w3-orange' style='width:100px;height:100px' onclick='disable_empty = true;display_setup(document.getElementById(\"main_view\"));'>+</button>"
+            }
+            // ------------------------------------------------------------------------------------
+
+            // -------------------------Send Message--------------------------------------
+            function sendData(data, send_url){
+                if (data != []){
+                    new_url = send_url.substr(1) + "?"
+                    for (var pair of data) {
+                        //console.log(pair[0]+ ', ' + pair[1])
+                        if (pair[0] == "color") pair[1] = encodeURIComponent(pair[1])
+                            new_url = (new_url + pair[0] + "=" + pair[1] + "&")
+                    }
+                    new_url = new_url.slice(0, -1)
+                } else new_url = send_url
+                console.log("Request to: " + new_url)
+                var xhttp = new XMLHttpRequest()
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+             		        var fixedResponse = this.responseText.replace(/\\'/g, "'")
+    		                //console.log(fixedResponse)
+                            var response = JSON.parse(fixedResponse)
+                            //console.log(response)
+                            if (response[0] != []) channels = response[0]
+                            //console.log(channels)
+                            if (response[1] != []) adresses = response[1]
+                            //console.log(adresses)
+                            if (response[2] != []) all_lights = response[2]
+                            //console.log(all_lights)
+                            if (response[3] != []) states = response[3]
+                            //console.log(states)
+                            window.dispatchEvent(newvalevent)
+                    }
+                }
+            xhttp.open("GET", new_url, true)
+            xhttp.send()
+            }
+            // ------------------------------------------------------------------------------------
+
+            // ------------------------------Display States---------------------------------
+            function next_state(){
+                if (current_state < states.length-1){
+                    current_state += 1
+                } else {
+                    current_state = 0
+                }
+                //console.log("Current State now: " + current_state.toString())
+                sendData([["position", current_state]], "{{ url_for('view_state') }}")
+            }
+
+            function prev_state(){
+                if (current_state > 0){
+                    current_state -= 1
+                } else {
+                    current_state = states.length-1
+                }
+                //console.log("Current State now: " + current_state.toString())
+                sendData([["position", current_state]], "{{ url_for('view_state') }}")
+            }
+
+            function save_state(){
+                // Nothing
+            }
+
+            function display_save_state(){
+                var container = document.getElementById("save_state_modal")
+                var box = container.childNodes[1].childNodes[3]
+                box.innerHTML = ""
+                //console.log(states.length)
+                for (state_info in states){
+                    var s = document.createElement('button')
+                    s.setAttribute('class', "w3-button w3-orange")
+                    s.setAttribute('style', "height:100px;width:100px;")
+                    s.setAttribute('onclick', "sendData([['position', " + state_info + "]], '{{ url_for('view_state') }}');current_state=" + state_info +";document.getElementById('save_state_modal').style.display = 'none';")
+                    s.innerHTML = states[state_info]["name"]
+                    box.appendChild(s)
+                }
+                container.style.display = "block"
+            }
+            // ------------------------------------------------------------------------------------
+
+            // ------------------------Setup Load event----------------------------------
+            window.addEventListener("newval", function(){
+                console.log("New Values arrived")
+                check_available(document.getElementById("lamp_setup"))
+                get_filenames(document.getElementById("load_setup"))
+                reloadSliders()
+            }, false);
+            // --------------------------------------------------------------------------
+
+            // ------------------------Setup Load event----------------------------------
+            document.addEventListener("DOMContentLoaded", function(){
+                console.log("Content Loaded")
+                sessionStorage.setItem("sliders", "[]")
+                sendData([], "/get")
+            }, false);
+            // --------------------------------------------------------------------------
+        </script>
+        <style>
+            input[type=range][orient=vertical]
+            {
+                writing-mode: bt-lr; /* IE */
+                -webkit-appearance: slider-vertical; /* WebKit */
+                width: 20px;
+                height: 175px;
+                padding: 0 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <!-------------------------------------------Load or New-------------------------------->
+        <div id="load_setup" class="w3-container">
+        </div>
+        <!-------------------------------------------------------------------------------------->
+
+        <!-------------------------------------------New Setup---------------------------------->
+        <div id="lamp_setup" class="w3-container" style="display:none">
+        </div>
+        <div id="setup_modal" class="w3-modal" style="display:none">
+            <div class="w3-modal-content">
+                <span onclick="this.parentElement.parentElement.style.display='none'" class="w3-button w3-display-topright">&times;</span>
+                <div class="w3-container">
+                    <button class="w3-button w3-orange" style="width:100px;height:100px;" onclick="open_name(this)">Lamp</button>
+                    <button class="w3-button w3-orange" style="width:100px;height:100px;" onclick="open_name(this)">LED-Bar</button>
+                    <button class="w3-button w3-orange" style="width:100px;height:100px;" onclick="open_name(this)">JBLED-A7</button>
+                </div>
+            </div>
+        </div>
+        <div id="name_modal" class="w3-modal" style="display:none">
+            <div class="w3-modal-content">
+                <span onclick="this.parentElement.parentElement.style.display='none'" class="w3-button w3-display-topright">&times;</span>
+                <div class="w3-container">
+                    <label>Custom Name</label>
+                    <input class="w3-input" type="text" placeholder="Leave blank for default">
+                    <button class="w3-button w3-orange" style="width:100px;height:100px;" onclick="lamp(this.parentElement)">Setup</button>
+                </div>
+            </div>
+        </div>
+        <!-------------------------------------------------------------------------------------->
+
+        <!-------------------------------------------------------------------------------------->
+        <div id="save_state_modal" class="w3-modal" style="display:none">
+            <div class="w3-modal-content">
+                <span onclick="this.parentElement.parentElement.style.display='none'" class="w3-button w3-display-topright">&times;</span>
+                <div class="w3-container">
+                </div>
+            </div>
+        </div>
+        <!-------------------------------------------------------------------------------------->
+
+        <!---------------------------------------Display Sliders-------------------------------->
+        <div id="main_view" class="w3-container" style="display:none">
+            <div id="sliders" class="w3-container">
+            </div>
+        </div>
+        <!-------------------------------------------------------------------------------------->
+    </body>
+</html>

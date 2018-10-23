@@ -24,7 +24,7 @@ Start with
 ```
 python main.py
 ```
-Then navigate to ```[YOURIP]:5000/``` in your Browser 
+Then navigate to ```[YOURIP]:5000/``` in your Browser
 
 ## HTML-Webhook Overview:
 All Words in [] are the parameters you have to give, all in {} are parameters you can give optionally
@@ -32,8 +32,8 @@ All Words in [] are the parameters you have to give, all in {} are parameters yo
 Displays just the Main Page with controls and everything
 * set: ```url:5000/set?dmx=[DMX]&value={VALUE}&color={HEXCODE}```
 DMX is your DMX-Adress and VALUE is the value you want to set it to. If you pass a color, you don't have to pass a value. The color is parsed in this Format #RRGGBB.
-* get: ```url:5000/get?dmx=[DMX]```
-DMX is your DMX-Adress.
+* get: ```url:5000/get```
+Get the current state of the program (all values e.g. channels, adresses, states, all_lights).
 * setup: ```url:5000/setup?dmx={STARTDMX}&type=[TYPE]&force={FORCE}```
 STARTDMX is the DMX-Adress where your adress range for your light begins (if you pass -1, the next free Adress range is used.), TYPE is the type of Lamp (if it is not in our library, just add it), which also sets up the names and numbers of channels used, and lastly FORCE is just if you want to override a fixture, thats already there.
 * new_light: ```url:5000/new_light?name=[NAME]&channels=[CHANNELS]```
